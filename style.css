@@ -183,7 +183,7 @@ body:has(.wl-active) #mainCard {
 #linksGrid {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px; /* Reduced gap for a tighter look */
+    gap: 0px; /* Reduced gap for a tighter look */
     justify-content: center;
     padding: 0px 0; /* Minimized top/bottom padding */
     width: 100%;
