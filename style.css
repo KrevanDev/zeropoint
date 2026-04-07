@@ -179,24 +179,55 @@ body:has(.wl-active) #mainCard {
 .command-floating-hint.visible { opacity: 1; }
 
 /* --- Shortcuts Grid --- */
-.links-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-.link-item { 
-    background: rgba(255, 255, 255, 0.03); 
-    padding: 12px 16px; 
-    border-radius: 12px; 
-    color: rgba(255, 255, 255, 0.8); 
-    text-decoration: none; 
-    border: 1px solid rgba(255, 255, 255, 0.05); 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    gap: 12px; 
-    transition: transform 0.2s, background 0.2s, border-color 0.2s, opacity 0.2s; 
-    cursor: grab;
-    user-select: none;
+#linksGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    padding: 20px;
 }
-.link-item:active { cursor: grabbing; }
-.link-item:hover { transform: translateY(-2px); background: rgba(255,255,255,0.08); color: #fff; border-color: var(--accent-color); }
+.links-grid { 
+    display: grid; 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 15px; 
+}
+.link-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 44px;
+}
+.link-item img {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.link-item span {
+    margin-left: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-weight: 500;
+}
+.link-item:active { 
+    cursor: grabbing; 
+}
+.link-item:hover {
+    max-width: 250px; /* Adjust based on your longest label */
+    background: var(--glow-color);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 15px var(--glow-color);
+}
+.link-item:hover span {
+    opacity: 1;
+}
 .link-item.dragging { opacity: 0.4; transform: scale(0.95); }
 .link-item.drag-over { border: 2px dashed var(--accent-color); background: rgba(255, 255, 255, 0.1); }
 .link-favicon { width: 18px; height: 18px; border-radius: 4px; pointer-events: none; }
