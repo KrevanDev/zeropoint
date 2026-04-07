@@ -1,6 +1,7 @@
 # ⚡ ZeroPoint // Start Page
 
-A minimalist, high-performance browser start page and productivity dashboard. Built with a focus on aesthetics, "Zen" focus, and a functional system terminal.
+A minimalist, high-performance browser start page and productivity dashboard.
+Built with a focus on aesthetics, minimalism, and the idea of a functional system terminal.
 
 ![License](https://img.shields.io/badge/license-MIT-blueviolet)
 ![Version](https://img.shields.io/badge/version-1.0.4a-neon)
