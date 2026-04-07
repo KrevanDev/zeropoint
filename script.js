@@ -404,7 +404,7 @@ async function getWeatherData() {
       const oneHour = 3600000;
 
       if (cacheAge < oneHour) {
-        console.log(`[SYS] Using cached weather data. (${Math.round(cacheAge / 60000)}m old)`);
+        console.log(`[SYS] Using cached weather data. (${Math.round(cacheAge / 3600000)}m old)`);
         lastWeatherData = cacheData.data;
         locEl.textContent = lastWeatherData.city;
         displayWeather();
