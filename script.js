@@ -26,8 +26,6 @@ let lastFocusedSubtaskId = null;
 let wakeLock = null;
 let lastSetTimerMinutes = 25;
 
-const themesList = ['toxic', 'blaze', 'cyberpunk', 'lofi', 'vaporwave', 'monochrome', 'iridescent'];
-
 // --- BACKGROUND CANVAS SYSTEM ---
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
@@ -58,11 +56,13 @@ class Particle {
   }
   draw() {
     const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ffffff';
+    const effect = appSettings.bgEffect;
+
     ctx.fillStyle = accent;
+    ctx.strokeStyle = accent;
     ctx.globalAlpha = 0.4;
     ctx.beginPath();
 
-    const effect = appSettings.bgEffect;
     if (effect === 'crystals') {
       ctx.save();
       ctx.translate(this.x, this.y);
@@ -81,16 +81,51 @@ class Particle {
       ctx.stroke();
       ctx.globalAlpha = 0.05;
       ctx.fill();
+    } else if (effect === 'stellar') {
+      // Twinkling star effect with a subtle outer glow
+      ctx.save();
+      ctx.shadowBlur = this.size * 3;
+      ctx.shadowColor = accent;
+      // Random flicker logic: occasionally brightens
+      ctx.globalAlpha = Math.random() > 0.98 ? 0.9 : 0.3;
+      ctx.arc(this.x, this.y, this.size * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (effect === 'petals') {
+      // Soft organic shapes (ellipses) that rotate
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.rotation);
+      ctx.ellipse(0, 0, this.size * 2, this.size, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (effect === 'leaves') {
+      // Diamond/Leaf shape for the forest theme
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.rotation);
+      ctx.moveTo(0, -this.size * 2);
+      ctx.lineTo(this.size, 0);
+      ctx.lineTo(0, this.size * 2);
+      ctx.lineTo(-this.size, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
     } else {
+      // Default 'classic' / 'geometric' / 'magnetic' circle
       ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
       ctx.fill();
     }
   }
+
   update(effect) {
     let dx = mouse.x - this.x;
     let dy = mouse.y - this.y;
     let distance = Math.sqrt(dx * dx + dy * dy);
 
+    // --- INTERACTIVE PHYSICS TIER ---
     if (effect === 'magnetic' && distance < mouse.radius * 2) {
       let force = (mouse.radius * 2 - distance) / (mouse.radius * 2);
       this.x += (dx / distance) * force * 2;
@@ -100,7 +135,20 @@ class Particle {
       let force = (mouse.radius - distance) / mouse.radius;
       this.x += (dx / distance) * force * this.density * 0.4;
       this.y += (dy / distance) * force * this.density * 0.4;
-    } else if (effect === 'geometric') {
+    } else if (effect === 'stellar' && distance < mouse.radius) {
+      // Subtle "gravity" pull for stars
+      let force = (mouse.radius - distance) / mouse.radius;
+      this.x += (dx / distance) * force * 0.5;
+      this.y += (dy / distance) * force * 0.5;
+    } else if (effect === 'leaves' && distance < mouse.radius) {
+      // Repel effect: Leaves "flutter" away from the cursor
+      let force = (mouse.radius - distance) / mouse.radius;
+      this.x -= (dx / distance) * force * 3;
+      this.y -= (dy / distance) * force * 3;
+    }
+
+    // --- MOVEMENT LOGIC TIER ---
+    if (effect === 'geometric') {
       this.angle += 0.01 * this.spin;
       this.x += Math.cos(this.angle) * 0.2;
       this.y += Math.sin(this.angle) * 0.2;
@@ -112,14 +160,33 @@ class Particle {
       this.y -= this.bubbleSpeed;
       this.x += Math.sin(this.y / 50) * 0.5;
       if (this.y < -20) this.y = canvas.height + 20;
+    } else if (effect === 'petals') {
+      // Falling and swaying logic
+      this.y += this.bubbleSpeed * 0.5;
+      this.x += Math.sin(this.y / 100) * 0.8;
+      this.rotation += 0.01 * this.spin;
+      if (this.y > canvas.height + 20) this.y = -20;
+    } else if (effect === 'leaves') {
+      // Drifting upward like embers/light leaves
+      this.y -= 0.3;
+      this.x += Math.cos(this.y / 50) * 0.3;
+      this.rotation += 0.005 * this.spin;
+      if (this.y < -20) this.y = canvas.height + 20;
     }
 
-    if (effect !== 'bubbles') {
+    // --- BOUNDARY & VELOCITY TIER ---
+    // Apply standard velocity to effects that aren't strictly vertical (bubbles/petals/leaves)
+    const isVerticalEffect = ['bubbles', 'petals', 'leaves'].includes(effect);
+
+    if (!isVerticalEffect) {
       this.x += this.speedX;
       this.y += this.speedY;
+
+      // Bounce off walls
       if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
       if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
     }
+
     this.draw();
   }
 }
@@ -217,13 +284,97 @@ function applyTheme(theme) {
   root.classList.remove('theme-iridescent');
 
   const themes = {
-    'toxic': { bg: '#050a05', card: 'rgba(57, 255, 20, 0.02)', timer: 'linear-gradient(to right, #39ff14, #a3ff00)', glow: 'rgba(57, 255, 20, 0.4)', accent: '#39ff14' },
-    'blaze': { bg: '#0a0300', card: 'rgba(255, 94, 0, 0.02)', timer: 'linear-gradient(to right, #ff5e00, #ffaa00)', glow: 'rgba(255, 94, 0, 0.4)', accent: '#ff5e00' },
-    'cyberpunk': { bg: '#0d0221', card: 'rgba(252, 238, 10, 0.02)', timer: 'linear-gradient(to right, #00ff9f, #00b8ff)', glow: 'rgba(252, 238, 10, 0.4)', accent: '#fcee0a' },
-    'lofi': { bg: '#2b213a', card: 'rgba(244, 162, 97, 0.03)', timer: 'linear-gradient(to right, #e76f51, #f4a261)', glow: 'rgba(244, 162, 97, 0.3)', accent: '#f4a261' },
-    'vaporwave': { bg: '#0b0014', card: 'rgba(255, 113, 206, 0.02)', timer: 'linear-gradient(to right, #01cdfe, #05ffa1)', glow: 'rgba(255, 113, 206, 0.4)', accent: '#ff71ce' },
-    'monochrome': { bg: '#0a0a0a', card: 'rgba(255, 255, 255, 0.02)', timer: 'linear-gradient(to right, #ffffff, #aaaaaa)', glow: 'rgba(255, 255, 255, 0.2)', accent: '#ffffff' },
-    'iridescent': { bg: '#101018', card: 'rgba(255, 255, 255, 0.05)', timer: 'linear-gradient(to right, #ff00ff, #00ffff)', glow: 'rgba(0, 255, 255, 0.5)', accent: '#ff00ff' }
+    'iridescent': {
+      bg: '#101018',
+      card: 'rgba(255, 255, 255, 0.05)',
+      timer: 'linear-gradient(to right, #ff00ff, #00ffff)',
+      glow: 'rgba(0, 255, 255, 0.5)',
+      accent: '#ff00ff'
+    },
+    'toxic': {
+      bg: '#050a05',
+      card: 'rgba(57, 255, 20, 0.02)',
+      timer: 'linear-gradient(to right, #39ff14, #a3ff00)',
+      glow: 'rgba(57, 255, 20, 0.4)',
+      accent: '#39ff14'
+    },
+    'blaze': {
+      bg: '#0a0300',
+      card: 'rgba(255, 94, 0, 0.02)',
+      timer: 'linear-gradient(to right, #ff5e00, #ffaa00)',
+      glow: 'rgba(255, 94, 0, 0.4)',
+      accent: '#ff5e00'
+    },
+    'cyberpunk': {
+      bg: '#0d0221',
+      card: 'rgba(252, 238, 10, 0.02)',
+      timer: 'linear-gradient(to right, #00ff9f, #00b8ff)',
+      glow: 'rgba(252, 238, 10, 0.4)',
+      accent: '#fcee0a'
+    },
+    'lofi': {
+      bg: '#2b213a',
+      card: 'rgba(244, 162, 97, 0.03)',
+      timer: 'linear-gradient(to right, #e76f51, #f4a261)',
+      glow: 'rgba(244, 162, 97, 0.3)',
+      accent: '#f4a261'
+    },
+    'vaporwave': {
+      bg: '#0b0014',
+      card: 'rgba(255, 113, 206, 0.02)',
+      timer: 'linear-gradient(to right, #01cdfe, #05ffa1)',
+      glow: 'rgba(255, 113, 206, 0.4)',
+      accent: '#ff71ce'
+    },
+    'monochrome': {
+      bg: '#0a0a0a',
+      card: 'rgba(255, 255, 255, 0.02)',
+      timer: 'linear-gradient(to right, #ffffff, #aaaaaa)',
+      glow: 'rgba(255, 255, 255, 0.2)',
+      accent: '#ffffff'
+    },
+    'sakura': {
+      bg: '#1a0f12',
+      card: 'rgba(255, 183, 197, 0.02)',
+      timer: 'linear-gradient(to right, #ffb7c5, #ff8fa3)',
+      glow: 'rgba(255, 143, 163, 0.4)',
+      accent: '#ffb7c5'
+    },
+    'forest': {
+      bg: '#080d08',
+      card: 'rgba(46, 139, 87, 0.02)',
+      timer: 'linear-gradient(to right, #2e8b57, #98fb98)',
+      glow: 'rgba(46, 139, 87, 0.4)',
+      accent: '#7cfc00'
+    },
+    'nebula': {
+      bg: '#050510',
+      card: 'rgba(138, 43, 226, 0.02)',
+      timer: 'linear-gradient(to right, #8a2be2, #00d2ff)',
+      glow: 'rgba(138, 43, 226, 0.5)',
+      accent: '#bf77ff'
+    },
+    'glacier': {
+      bg: '#000a0f',
+      card: 'rgba(0, 242, 255, 0.02)',
+      timer: 'linear-gradient(to right, #00f2ff, #ffffff)',
+      glow: 'rgba(0, 242, 255, 0.3)',
+      accent: '#a3f7ff'
+    },
+    'midnight': {
+      bg: '#020205',
+      card: 'rgba(255, 255, 255, 0.01)',
+      timer: 'linear-gradient(to right, #1e3a8a, #3b82f6)',
+      glow: 'rgba(59, 130, 246, 0.3)',
+      accent: '#60a5fa'
+    },
+    'amber': {
+      bg: '#0f0900',
+      card: 'rgba(255, 191, 0, 0.02)',
+      timer: 'linear-gradient(to right, #ffbf00, #ff8000)',
+      glow: 'rgba(255, 191, 0, 0.4)',
+      accent: '#ffd700'
+    }
   };
 
   const selected = themes[theme] || themes['toxic'];
@@ -476,8 +627,8 @@ function saveToDisk() {
 }
 
 // --- COMMAND PALETTE ENGINE ---
-const themes = ['toxic', 'blaze', 'cyberpunk', 'lofi', 'vaporwave', 'monochrome', 'iridescent'];
-const backgrounds = ['classic', 'magnetic', 'matrix', 'geometric', 'crystals', 'bubbles'];
+const themes = ['toxic', 'blaze', 'cyberpunk', 'lofi', 'vaporwave', 'monochrome', 'iridescent', 'sakura', 'forest', 'nebula', 'glacier', 'midnight', 'amber'];
+const backgrounds = ['classic', 'magnetic', 'matrix', 'geometric', 'crystals', 'bubbles', 'stellar', 'petals', 'leaves'];
 const commands = ['/theme', '/bg', '/timer', '/zen'];
 
 function handleCommand(query) {
@@ -707,14 +858,14 @@ const termInput = document.getElementById('terminalInput');
 const termOutput = document.getElementById('terminalOutput');
 
 // --- TERMINAL INITIALIZATION & DISCLAIMER ---
-let terminalInitialized = localStorage.getItem('zpt_terminal_init') === 'true';
+let terminalInitialized = false; // Reset to false on every page load
 
 function showTerminalDisclaimer() {
   const output = document.getElementById('terminalOutput');
+  output.innerHTML = ''; // Clear any previous session logs
 
   const disclaimer = [
     "--------------------------------------------------",
-    "ZPT // SYSTEM TERMINAL v1.0.4",
     "SECURITY NOTICE: RESTRICTED ACCESS ENVIRONMENT",
     "--------------------------------------------------",
     "NOTE: This terminal is a sandboxed simulation designed",
@@ -722,28 +873,30 @@ function showTerminalDisclaimer() {
     "Internal commands only. No direct OS hooks enabled.",
     "--------------------------------------------------",
     "Type 'help' to begin.",
-    ""
+    " "
   ];
 
   disclaimer.forEach((line, i) => {
     setTimeout(() => {
       printLine(line, 'system');
-    }, i * 100); // Staggered typing effect
+    }, i * 80); // Slightly faster staggered typing
   });
 
-  localStorage.setItem('zpt_terminal_init', 'true');
   terminalInitialized = true;
 }
 
-// Update your toggle listener to trigger the disclaimer
+// Update your toggle listener to trigger the disclaimer every fresh session
 document.addEventListener('keydown', (e) => {
   if (e.key === '`') {
     e.preventDefault();
+    const termDrawer = document.getElementById('terminalDrawer');
+    const termInput = document.getElementById('terminalInput');
+
     termDrawer.classList.toggle('open');
 
     if (termDrawer.classList.contains('open')) {
       termInput.focus();
-      // Show disclaimer only on the very first open
+      // Trigger the disclaimer if it hasn't run since the last refresh
       if (!terminalInitialized) {
         showTerminalDisclaimer();
       }
@@ -799,15 +952,6 @@ window.fetch = async (...args) => {
   }
 };
 
-// // 1. Toggle with Backtick (`)
-// document.addEventListener('keydown', (e) => {
-//   if (e.key === '`') {
-//     e.preventDefault();
-//     termDrawer.classList.toggle('open');
-//     if (termDrawer.classList.contains('open')) termInput.focus();
-//   }
-// });
-
 // 2. Command Processor
 termInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
@@ -833,7 +977,10 @@ function processTerminalCommand(input) {
 
   switch (cmd) {
     case 'help':
-      printLine("Available: clear, status, config, setname [name], reset, weather, ls, uptime, clear, wakelock, storage, exit, bench, env, locate", "system");
+      printLine("Available commands: ")
+      printLine("bench, clear, config, env, exit", "system")
+      printLine("locate, ls, reset, setname {name}, status", "system")
+      printLine("storage, uptime, wakelock, weather", "system")
       break;
     case 'clear':
       termOutput.innerHTML = '';
