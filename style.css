@@ -185,7 +185,7 @@ body:has(.wl-active) #mainCard {
     flex-wrap: wrap;
     gap: 10px; /* Reduced gap for a tighter look */
     justify-content: center;
-    padding: 10px 0; /* Minimized top/bottom padding */
+    padding: 0px 0; /* Minimized top/bottom padding */
     width: 100%;
     margin-top: -5px; /* Slight pull-up to align closer to the clock/weather */
 }
