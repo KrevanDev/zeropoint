@@ -1,0 +1,696 @@
+/**
+ * ZeroPoint Start Page Logic
+ * Refactored for modularity and clarity.
+ */
+
+// --- Global App State ---
+let appSettings = {
+  userName: 'User',
+  timeFormat: '24',
+  theme: 'toxic',
+  bgEffect: 'classic',
+  weatherUnit: 'C',
+  shortcuts: [
+    { label: 'GitHub', url: 'https://github.com' },
+    { label: 'YouTube', url: 'https://youtube.com' }
+  ]
+};
+
+let todoData = [];
+let isTimerMode = false;
+let timerSecs = 25 * 60;
+let timerInterval = null;
+let isRunning = false;
+let lastWeatherData = null;
+let lastFocusedSubtaskId = null;
+let wakeLock = null;
+let lastSetTimerMinutes = 25;
+
+const themesList = ['toxic', 'blaze', 'cyberpunk', 'lofi', 'vaporwave', 'monochrome', 'iridescent'];
+
+// --- BACKGROUND CANVAS SYSTEM ---
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let matrixDrops = [];
+const mouse = { x: null, y: null, radius: 150 };
+
+/**
+ * Particle Class
+ */
+class Particle {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = Math.random() * 2 + 1;
+    this.baseSize = this.size;
+    this.density = (Math.random() * 30) + 1;
+    this.speedX = Math.random() * 0.5 - 0.25;
+    this.speedY = Math.random() * 0.5 - 0.25;
+    this.angle = Math.random() * 360;
+    this.spin = Math.random() < 0.5 ? 1 : -1;
+    this.points = Math.floor(Math.random() * 3) + 5;
+    this.rotation = Math.random() * Math.PI * 2;
+    this.bubbleSpeed = Math.random() * 1 + 0.5;
+  }
+  draw() {
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ffffff';
+    ctx.fillStyle = accent;
+    ctx.globalAlpha = 0.4;
+    ctx.beginPath();
+
+    const effect = appSettings.bgEffect;
+    if (effect === 'crystals') {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.rotation);
+      ctx.moveTo(this.size * 3, 0);
+      for (let i = 1; i < this.points; i++) {
+        ctx.lineTo(this.size * 3 * Math.cos(i * 2 * Math.PI / this.points), this.size * 3 * Math.sin(i * 2 * Math.PI / this.points));
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.globalAlpha = 0.1;
+      ctx.fill();
+      ctx.restore();
+    } else if (effect === 'bubbles') {
+      ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 0.05;
+      ctx.fill();
+    } else {
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  update(effect) {
+    let dx = mouse.x - this.x;
+    let dy = mouse.y - this.y;
+    let distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (effect === 'magnetic' && distance < mouse.radius * 2) {
+      let force = (mouse.radius * 2 - distance) / (mouse.radius * 2);
+      this.x += (dx / distance) * force * 2;
+      this.y += (dy / distance) * force * 2;
+      this.size = this.baseSize + (force * 3);
+    } else if (effect === 'classic' && distance < mouse.radius) {
+      let force = (mouse.radius - distance) / mouse.radius;
+      this.x += (dx / distance) * force * this.density * 0.4;
+      this.y += (dy / distance) * force * this.density * 0.4;
+    } else if (effect === 'geometric') {
+      this.angle += 0.01 * this.spin;
+      this.x += Math.cos(this.angle) * 0.2;
+      this.y += Math.sin(this.angle) * 0.2;
+    } else if (effect === 'crystals') {
+      this.rotation += 0.01 * this.spin;
+      this.x += this.speedX * 0.5;
+      this.y += this.speedY * 0.5;
+    } else if (effect === 'bubbles') {
+      this.y -= this.bubbleSpeed;
+      this.x += Math.sin(this.y / 50) * 0.5;
+      if (this.y < -20) this.y = canvas.height + 20;
+    }
+
+    if (effect !== 'bubbles') {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+      if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+    }
+    this.draw();
+  }
+}
+
+function initCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  particles = [];
+  const count = (canvas.width * canvas.height) / 10000;
+  for (let i = 0; i < count; i++) particles.push(new Particle());
+
+  const columns = Math.floor(canvas.width / 20);
+  matrixDrops = Array(columns).fill(1);
+}
+
+function animateBg() {
+  const effect = appSettings.bgEffect;
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ffffff';
+
+  if (effect === 'matrix') {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  } else {
+    ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+    ctx.globalAlpha = 1;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  if (effect === 'matrix') {
+    ctx.fillStyle = accent;
+    ctx.font = "15px monospace";
+    matrixDrops.forEach((y, i) => {
+      const text = String.fromCharCode(Math.random() * 128);
+      const x = i * 20;
+      ctx.fillText(text, x, y * 20);
+      let dist = Math.abs(x - mouse.x);
+      let speed = (dist < 100) ? 0.5 : 0.25;
+      if (y * 20 > canvas.height && Math.random() > 0.975) matrixDrops[i] = 0;
+      matrixDrops[i] += speed;
+    });
+  } else {
+    ctx.strokeStyle = accent;
+    for (let a = 0; a < particles.length; a++) {
+      if (effect === 'classic' || effect === 'geometric') {
+        for (let b = a; b < particles.length; b++) {
+          let dx = particles[a].x - particles[b].x;
+          let dy = particles[a].y - particles[b].y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          let limit = effect === 'classic' ? 150 : 80;
+          if (dist < limit) {
+            ctx.globalAlpha = (1 - (dist / limit)) * 0.15;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(particles[a].x, particles[a].y);
+            ctx.lineTo(particles[b].x, particles[b].y);
+            ctx.stroke();
+          }
+        }
+      }
+      particles[a].update(effect);
+    }
+  }
+  requestAnimationFrame(animateBg);
+}
+
+// --- SETTINGS & THEME ENGINE ---
+function loadSettings() {
+  const saved = localStorage.getItem('startpageSettings');
+  if (saved) {
+    try {
+      appSettings = { ...appSettings, ...JSON.parse(saved) };
+    } catch (e) { console.error("Failed to parse settings"); }
+  }
+
+  const savedTodos = localStorage.getItem('startpageTodos');
+  if (savedTodos) {
+    try { todoData = JSON.parse(savedTodos); } catch (e) { todoData = []; }
+  }
+
+  document.getElementById('userNameInput').value = appSettings.userName;
+  document.getElementById('timeFormatSelect').value = appSettings.timeFormat;
+  document.getElementById('themeSelect').value = appSettings.theme;
+  document.getElementById('bgEffectSelect').value = appSettings.bgEffect;
+
+  applyTheme(appSettings.theme);
+  renderLinks();
+  renderEditor();
+  renderTodos();
+  getWeatherData();
+  updateTimerDuration();
+}
+
+function applyTheme(theme) {
+  const root = document.documentElement;
+  root.classList.remove('theme-iridescent');
+
+  const themes = {
+    'toxic': { bg: '#050a05', card: 'rgba(57, 255, 20, 0.02)', timer: 'linear-gradient(to right, #39ff14, #a3ff00)', glow: 'rgba(57, 255, 20, 0.4)', accent: '#39ff14' },
+    'blaze': { bg: '#0a0300', card: 'rgba(255, 94, 0, 0.02)', timer: 'linear-gradient(to right, #ff5e00, #ffaa00)', glow: 'rgba(255, 94, 0, 0.4)', accent: '#ff5e00' },
+    'cyberpunk': { bg: '#0d0221', card: 'rgba(252, 238, 10, 0.02)', timer: 'linear-gradient(to right, #00ff9f, #00b8ff)', glow: 'rgba(252, 238, 10, 0.4)', accent: '#fcee0a' },
+    'lofi': { bg: '#2b213a', card: 'rgba(244, 162, 97, 0.03)', timer: 'linear-gradient(to right, #e76f51, #f4a261)', glow: 'rgba(244, 162, 97, 0.3)', accent: '#f4a261' },
+    'vaporwave': { bg: '#0b0014', card: 'rgba(255, 113, 206, 0.02)', timer: 'linear-gradient(to right, #01cdfe, #05ffa1)', glow: 'rgba(255, 113, 206, 0.4)', accent: '#ff71ce' },
+    'monochrome': { bg: '#0a0a0a', card: 'rgba(255, 255, 255, 0.02)', timer: 'linear-gradient(to right, #ffffff, #aaaaaa)', glow: 'rgba(255, 255, 255, 0.2)', accent: '#ffffff' },
+    'iridescent': { bg: '#101018', card: 'rgba(255, 255, 255, 0.05)', timer: 'linear-gradient(to right, #ff00ff, #00ffff)', glow: 'rgba(0, 255, 255, 0.5)', accent: '#ff00ff' }
+  };
+
+  const selected = themes[theme] || themes['toxic'];
+  if (theme === 'iridescent') root.classList.add('theme-iridescent');
+
+  document.body.style.background = selected.bg;
+  document.getElementById('mainCard').style.background = selected.card;
+  root.style.setProperty('--timer-color', selected.timer);
+  root.style.setProperty('--glow-color', selected.glow);
+  root.style.setProperty('--accent-color', selected.accent);
+  document.getElementById('mainCard').style.boxShadow = `0 8px 32px 0 rgba(0, 0, 0, 0.6), 0 0 20px ${selected.glow}`;
+}
+
+// --- WEATHER SYSTEM ---
+async function getWeatherData() {
+  const locEl = document.getElementById('weatherLoc');
+  const tempEl = document.getElementById('weatherTemp');
+  const handleError = (msg) => { locEl.textContent = msg; tempEl.textContent = "--"; };
+
+  if (!navigator.geolocation) return handleError("Not Supported");
+
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    const { latitude: lat, longitude: lon } = position.coords;
+    locEl.textContent = "Updating...";
+
+    try {
+      const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+      const weatherData = await weatherRes.json();
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
+      const geoData = await geoRes.json();
+
+      const city = geoData.address.city || geoData.address.town || geoData.address.village || "Nearby";
+      lastWeatherData = { tempC: weatherData.current_weather.temperature, code: weatherData.current_weather.weathercode, city };
+
+      locEl.textContent = city;
+      displayWeather();
+    } catch (e) { handleError("API Error"); }
+  }, (err) => handleError("Loc. Error"), { timeout: 10000 });
+}
+
+function displayWeather() {
+  if (!lastWeatherData) return;
+  const tempEl = document.getElementById('weatherTemp');
+  const { tempC, code } = lastWeatherData;
+  let displayTemp = appSettings.weatherUnit === 'F' ? Math.round((tempC * 9 / 5) + 32) : Math.round(tempC);
+  let icon = code <= 3 ? (code === 0 ? '☀️' : '☁️') : '🌧️';
+  tempEl.textContent = `${icon} ${displayTemp}°${appSettings.weatherUnit}`;
+}
+
+function toggleWeatherUnit() {
+  appSettings.weatherUnit = appSettings.weatherUnit === 'C' ? 'F' : 'C';
+  saveToDisk();
+  displayWeather();
+}
+
+// --- CLOCK & FOCUS TIMER ---
+function updateClock() {
+  const clockEl = document.getElementById('clock');
+  const greetEl = document.getElementById('greeting');
+
+  if (!isTimerMode) {
+    const now = new Date();
+    let h = now.getHours();
+    const m = String(now.getMinutes()).padStart(2, '0');
+    if (appSettings.timeFormat === '12') {
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      clockEl.textContent = `${h}:${m} ${ampm}`;
+    } else {
+      clockEl.textContent = `${String(h).padStart(2, '0')}:${m}`;
+    }
+    greetEl.textContent = `ZeroPoint // ${appSettings.userName}`;
+  } else {
+    const m = String(Math.floor(timerSecs / 60)).padStart(2, '0');
+    const s = String(timerSecs % 60).padStart(2, '0');
+    clockEl.textContent = `${m}:${s}`;
+    greetEl.textContent = "ZeroPoint // Focus";
+  }
+}
+
+function updateTimerDuration() {
+  if (!isRunning) {
+    timerSecs = lastSetTimerMinutes * 60;
+    updateClock();
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  isRunning = false;
+  document.getElementById('timerStartBtn').textContent = "Start";
+  timerSecs = lastSetTimerMinutes * 60;
+  updateClock();
+}
+
+// --- TASK SYSTEM ---
+function renderTodos() {
+  const area = document.getElementById('todoDisplayArea'); area.innerHTML = '';
+  todoData.forEach((todo, idx) => {
+    const div = document.createElement('div'); div.className = 'todo-item-box';
+    div.innerHTML = `
+            <div class="todo-main-line">
+                <span class="todo-text-display ${todo.done ? 'done' : ''}" onclick="toggleTodo(${idx})">${todo.text}</span>
+                <button class="del-btn" onclick="deleteTodo(${idx})">&times;</button>
+            </div>
+            <div class="subtask-area">
+                ${todo.subtasks.map((sub, sIdx) => `
+                    <div class="sub-item">
+                        <input type="checkbox" ${sub.done ? 'checked' : ''} onchange="toggleSub(${idx},${sIdx})">
+                        <span class="${sub.done ? 'sub-done' : ''}">${sub.text}</span>
+                        <button class="del-btn" style="font-size:0.8rem" onclick="delSub(${idx},${sIdx})">&times;</button>
+                    </div>`).join('')}
+                <input type="text" class="sub-input-box" id="subInput-${idx}" placeholder="Add subtask..." onkeydown="handleSubKey(event, ${idx})">
+            </div>`;
+    area.appendChild(div);
+  });
+  localStorage.setItem('startpageTodos', JSON.stringify(todoData));
+  if (lastFocusedSubtaskId) {
+    const el = document.getElementById(lastFocusedSubtaskId);
+    if (el) el.focus();
+  }
+}
+
+function toggleTodo(i) { todoData[i].done = !todoData[i].done; renderTodos(); }
+function deleteTodo(i) { todoData.splice(i, 1); renderTodos(); }
+function toggleSub(i, si) { todoData[i].subtasks[si].done = !todoData[i].subtasks[si].done; renderTodos(); }
+function delSub(i, si) { todoData[i].subtasks.splice(si, 1); renderTodos(); }
+function handleSubKey(e, i) {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    todoData[i].subtasks.push({ text: e.target.value.trim(), done: false });
+    lastFocusedSubtaskId = `subInput-${i}`;
+    renderTodos();
+  }
+}
+
+// --- SHORTCUTS SYSTEM ---
+let dragSrcIndex = null;
+
+function renderLinks() {
+  const grid = document.getElementById('linksGrid');
+  grid.innerHTML = '';
+  appSettings.shortcuts.forEach((s, i) => {
+    const a = document.createElement('a');
+    a.href = s.url; a.className = 'link-item'; a.draggable = true; a.dataset.index = i;
+    try {
+      const domain = new URL(s.url).hostname;
+      a.innerHTML = `<img src="https://www.google.com/s2/favicons?sz=64&domain=${domain}" class="link-favicon"><span>${s.label}</span>`;
+    } catch (e) { a.innerHTML = `<span>${s.label}</span>`; }
+
+    a.addEventListener('dragstart', handleDragStart);
+    a.addEventListener('dragover', handleDragOver);
+    a.addEventListener('dragleave', handleDragLeave);
+    a.addEventListener('drop', handleDrop);
+    a.addEventListener('dragend', handleDragEnd);
+    grid.appendChild(a);
+  });
+}
+
+function renderEditor() {
+  const list = document.getElementById('shortcutEditorList');
+  list.innerHTML = '';
+  appSettings.shortcuts.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'shortcut-edit-item';
+    div.innerHTML = `<span>${s.label}</span><button class="del-btn" onclick="removeShortcut(${i})">&times;</button>`;
+    list.appendChild(div);
+  });
+}
+
+function removeShortcut(index) {
+  appSettings.shortcuts.splice(index, 1);
+  saveToDisk();
+  renderLinks();
+  renderEditor();
+}
+
+// Drag & Drop Handlers
+function handleDragStart(e) { dragSrcIndex = this.dataset.index; this.classList.add('dragging'); }
+function handleDragOver(e) { if (e.preventDefault) e.preventDefault(); this.classList.add('drag-over'); return false; }
+function handleDragLeave() { this.classList.remove('drag-over'); }
+function handleDrop(e) {
+  e.stopPropagation(); e.preventDefault();
+  const targetIndex = this.dataset.index;
+  if (dragSrcIndex !== targetIndex) {
+    const movedItem = appSettings.shortcuts.splice(dragSrcIndex, 1)[0];
+    appSettings.shortcuts.splice(targetIndex, 0, movedItem);
+    saveToDisk();
+    renderLinks();
+  }
+  return false;
+}
+function handleDragEnd() {
+  document.querySelectorAll('.link-item').forEach(item => {
+    item.classList.remove('dragging'); item.classList.remove('drag-over');
+  });
+}
+
+// --- UI & NAVIGATION ---
+function switchView(v) {
+  document.getElementById('dashboardView').classList.toggle('hidden', v !== 'dash');
+  document.getElementById('todoView').classList.toggle('hidden', v !== 'todo');
+  document.getElementById('navDashboardBtn').classList.toggle('active', v === 'dash');
+  document.getElementById('navTodoBtn').classList.toggle('active', v === 'todo');
+  if (v === 'todo') setTimeout(() => document.getElementById('todoInputMain').focus(), 100);
+}
+
+function toggleSettings(open) {
+  const modal = document.getElementById('settingsModal');
+  const backdrop = document.getElementById('modalBackdrop');
+  const container = document.querySelector('.container');
+  if (open) {
+    modal.classList.add('active');
+    backdrop.classList.add('active');
+    container.classList.add('dimmed');
+    renderEditor();
+  } else {
+    modal.classList.remove('active');
+    backdrop.classList.remove('active');
+    container.classList.remove('dimmed');
+  }
+}
+
+function saveToDisk() {
+  localStorage.setItem('startpageSettings', JSON.stringify(appSettings));
+}
+
+// --- COMMAND PALETTE ENGINE ---
+const themes = ['toxic', 'blaze', 'cyberpunk', 'lofi', 'vaporwave', 'monochrome', 'iridescent'];
+const backgrounds = ['classic', 'magnetic', 'matrix', 'geometric', 'crystals', 'bubbles'];
+const commands = ['/theme', '/bg', '/timer', '/zen'];
+
+function handleCommand(query) {
+  const parts = query.split(' ');
+  const command = parts[0].toLowerCase();
+  const value = parts[1] ? parts[1].toLowerCase() : null;
+
+  switch (command) {
+    case '/theme':
+      if (value && themes.includes(value)) {
+        appSettings.theme = value;
+        applyTheme(value);
+        document.getElementById('themeSelect').value = value;
+        saveToDisk();
+      }
+      break;
+    case '/bg':
+      if (value && backgrounds.includes(value)) {
+        appSettings.bgEffect = value;
+        document.getElementById('bgEffectSelect').value = value;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (value === 'matrix') {
+          const columns = Math.floor(canvas.width / 20);
+          matrixDrops = Array(columns).fill(1);
+        } else { initCanvas(); }
+        saveToDisk();
+      }
+      break;
+    case '/timer':
+      if (value && !isNaN(value)) {
+        lastSetTimerMinutes = parseInt(value);
+        timerSecs = lastSetTimerMinutes * 60;
+        isTimerMode = true;
+        document.getElementById('mainCard').classList.add('timer-mode');
+        updateClock();
+      }
+      break;
+    case '/zen':
+      document.body.classList.add('zen-active');
+      const exitZen = () => {
+        document.body.classList.remove('zen-active');
+        document.removeEventListener('keydown', exitZen);
+        document.removeEventListener('click', exitZen);
+      };
+      setTimeout(() => {
+        document.addEventListener('keydown', exitZen);
+        document.addEventListener('click', exitZen);
+      }, 500);
+      break;
+  }
+}
+
+// --- EVENT LISTENERS ---
+
+window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+window.addEventListener('resize', () => { initCanvas(); });
+
+document.getElementById('timeWrapper').onclick = () => {
+  isTimerMode = !isTimerMode;
+  document.getElementById('mainCard').classList.toggle('timer-mode', isTimerMode);
+  updateTimerDuration();
+};
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('popoutMenu');
+  if (!menu.contains(e.target)) {
+    menu.classList.remove('active');
+  }
+});
+
+document.getElementById('timerStartBtn').onclick = function () {
+  if (Notification.permission === "default") Notification.requestPermission();
+  if (isRunning) {
+    clearInterval(timerInterval); this.textContent = "Start"; isRunning = false;
+  } else {
+    isRunning = true; this.textContent = "Pause";
+    timerInterval = setInterval(() => {
+      if (timerSecs > 0) { timerSecs--; updateClock(); }
+      else {
+        clearInterval(timerInterval);
+        new Notification("Complete!", { body: "Take a break." });
+        resetTimer();
+      }
+    }, 1000);
+  }
+};
+
+document.getElementById('timerResetBtn').onclick = resetTimer;
+
+document.getElementById('todoForm').onsubmit = (e) => {
+  e.preventDefault();
+  const inp = document.getElementById('todoInputMain');
+  if (inp.value.trim()) {
+    todoData.push({ text: inp.value.trim(), done: false, subtasks: [] });
+    inp.value = ''; renderTodos();
+  }
+};
+
+document.getElementById('navDashboardBtn').onclick = () => switchView('dash');
+document.getElementById('navTodoBtn').onclick = () => switchView('todo');
+document.getElementById('menuToggle').onclick = e => { e.stopPropagation(); document.getElementById('popoutMenu').classList.toggle('active'); };
+document.getElementById('settingsBtn').onclick = () => toggleSettings(true);
+document.getElementById('closeSettingsBtn').onclick = () => toggleSettings(false);
+document.getElementById('modalBackdrop').onclick = () => toggleSettings(false);
+
+document.getElementById('saveSettingsBtn').onclick = () => {
+  appSettings.userName = document.getElementById('userNameInput').value;
+  appSettings.timeFormat = document.getElementById('timeFormatSelect').value;
+  appSettings.theme = document.getElementById('themeSelect').value;
+  appSettings.bgEffect = document.getElementById('bgEffectSelect').value;
+  saveToDisk();
+  applyTheme(appSettings.theme);
+  renderLinks();
+  if (!isRunning) updateTimerDuration();
+  toggleSettings(false);
+};
+
+document.getElementById('addShortcutBtn').onclick = () => {
+  const label = document.getElementById('newLabel').value.trim();
+  const url = document.getElementById('newUrl').value.trim();
+  if (label && url) {
+    appSettings.shortcuts.push({ label, url });
+    document.getElementById('newLabel').value = '';
+    document.getElementById('newUrl').value = '';
+    saveToDisk();
+    renderLinks();
+    renderEditor();
+  }
+};
+
+document.getElementById('searchForm').onsubmit = (e) => {
+  e.preventDefault();
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) return;
+  if (query.startsWith('/')) {
+    handleCommand(query);
+  } else {
+    window.open(`https://duckduckgo.com/?q=${encodeURIComponent(query)}`, '_blank');
+  }
+  document.getElementById('searchInput').value = '';
+  document.getElementById('commandHint').classList.remove('visible');
+};
+
+// --- COMMAND HINT & TAB AUTOCOMPLETE ---
+let currentSuggestion = "";
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  const val = e.target.value.toLowerCase();
+  const hint = document.getElementById('commandHint');
+  currentSuggestion = "";
+
+  // Hide hint if not a command
+  if (!val.startsWith('/')) {
+    hint.classList.remove('visible');
+    return;
+  }
+
+  const parts = val.split(' ');
+  const cmd = parts[0];
+  const arg = parts[1] !== undefined ? parts[1] : null;
+
+  if (parts.length === 1) {
+    // Tier 1: Matching base commands
+    const matches = commands.filter(c => c.startsWith(cmd));
+    if (matches.length > 0) {
+      hint.classList.add('visible');
+      hint.textContent = `Available: ${matches.join(', ')}`;
+      currentSuggestion = matches[0]; // Store the top match for Tab completion
+    } else {
+      hint.classList.remove('visible');
+    }
+  } else if (parts.length === 2) {
+    // Tier 2: Secondary options based on the base command
+    if (cmd === '/theme') {
+      const matches = themes.filter(t => t.startsWith(arg));
+      if (matches.length > 0) {
+        hint.classList.add('visible');
+        hint.textContent = `Themes: ${matches.join(', ')}`;
+        currentSuggestion = `${cmd} ${matches[0]}`;
+      } else {
+        hint.classList.remove('visible');
+      }
+    } else if (cmd === '/bg') {
+      const matches = backgrounds.filter(b => b.startsWith(arg));
+      if (matches.length > 0) {
+        hint.classList.add('visible');
+        hint.textContent = `Backgrounds: ${matches.join(', ')}`;
+        currentSuggestion = `${cmd} ${matches[0]}`;
+      } else {
+        hint.classList.remove('visible');
+      }
+    } else if (cmd === '/timer') {
+      hint.classList.add('visible');
+      hint.textContent = "Enter minutes (e.g., /timer 25)";
+    } else {
+      hint.classList.remove('visible'); // Hides for /zen or unknown commands
+    }
+  } else {
+    // Tier 3: Typing beyond the required parameters
+    hint.classList.remove('visible');
+  }
+});
+
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') {
+    const val = e.target.value;
+
+    // Only hijack the Tab key if the user is using the command palette
+    if (val.startsWith('/')) {
+      e.preventDefault(); // Stop the browser from shifting focus to the next UI element
+
+      if (currentSuggestion) {
+        // If we autocomplete a base command (like /theme), append a space automatically
+        const isBaseCommand = commands.includes(currentSuggestion) && !val.includes(' ');
+        e.target.value = currentSuggestion + (isBaseCommand ? " " : "");
+
+        // Manually fire the input event to instantly show the next tier of hints
+        e.target.dispatchEvent(new Event('input'));
+      }
+    }
+  }
+});
+
+// Wake Lock Handler
+document.getElementById('wakeLockBtn').onclick = async () => {
+  const btn = document.getElementById('wakeLockBtn');
+  if (!wakeLock) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      btn.classList.add('wl-active');
+      wakeLock.addEventListener('release', () => { if (wakeLock) btn.classList.remove('wl-active'); });
+    } catch (e) { }
+  } else { wakeLock.release(); wakeLock = null; btn.classList.remove('wl-active'); }
+};
+
+// Initialize App
+initCanvas();
+animateBg();
+setInterval(() => { if (!isTimerMode) updateClock(); }, 1000);
+updateClock();
+loadSettings();
