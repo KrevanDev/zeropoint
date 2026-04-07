@@ -1074,6 +1074,21 @@ function processTerminalCommand(input) {
         printLine(`LON: ${pos.coords.longitude.toFixed(4)}`, "system");
       }, err => printLine(`GPS Error: ${err.message}`, "error"));
       break;
+    case 'fetch':
+      const logo = [
+        "   _____              ____  _       __",
+        "  /__  / ___  _______/ __ \\(_)___  / /_",
+        "    / / / _ \\/ ___/ __ \\/_/ / / __ \\/ __/",
+        "   / /_/  __/ /  / /_/ / ____/ / / / /_  ",
+        "  /____/\\___/_/   \\____/_/   /_/ /_/\\__/ "
+      ];
+      logo.forEach(line => printLine(line, "system"));
+      printLine("--------------------------------", "user");
+      printLine(`OS: ${navigator.platform}`, "system");
+      printLine(`RES: ${window.innerWidth}x${window.innerHeight}`, "system");
+      printLine(`THEME: ${appSettings.theme.toUpperCase()}`, "system");
+      printLine(`UPTIME: ${Math.floor(performance.now() / 1000)}s`, "system");
+      break;
     case 'about':
       printLine("ZeroPoint Terminal is a localized dashboard utility.", "system");
       printLine("It operates within a secure browser sandbox and cannot", "system");
