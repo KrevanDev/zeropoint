@@ -400,8 +400,11 @@ async function getWeatherData() {
     try {
       const cacheData = JSON.parse(cached);
       const now = Date.now();
-      // Only use cache if it is less than 15 minutes old (900,000 ms)
-      if (now - cacheData.timestamp < 3600000) {
+      const cacheAge = now - cacheData.timestamp;
+      const oneHour = 3600000;
+
+      if (cacheAge < oneHour) {
+        console.log(`[SYS] Using cached weather data. (${Math.round(cacheAge / 60000)}m old)`);
         lastWeatherData = cacheData.data;
         locEl.textContent = lastWeatherData.city;
         displayWeather();
