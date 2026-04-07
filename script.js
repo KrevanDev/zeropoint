@@ -762,18 +762,29 @@ document.getElementById('addShortcutBtn').onclick = () => {
   }
 };
 
-document.getElementById('searchForm').onsubmit = (e) => {
-  e.preventDefault();
-  const query = document.getElementById('searchInput').value.trim();
-  if (!query) return;
-  if (query.startsWith('/')) {
-    handleCommand(query);
-  } else {
-    window.open(`https://duckduckgo.com/?q=${encodeURIComponent(query)}`, '_blank');
-  }
-  document.getElementById('searchInput').value = '';
-  document.getElementById('commandHint').classList.remove('visible');
+document.getElementById('addShortcutBtn').onclick = () => {
+    const label = document.getElementById('newLabel').value.trim();
+    const url = document.getElementById('newUrl').value.trim();
+
+    // Check if we've already hit the 10-item limit
+    if (appSettings.shortcuts.length >= 10) {
+        // Log to your terminal so you know why it failed
+        console.warn("SYSTEM: Bookmark limit reached (Max 10).");
+        alert("Maximum of 10 bookmarks allowed.");
+        return;
+    }
+
+    if (label && url) {
+        appSettings.shortcuts.push({ label, url });
+        document.getElementById('newLabel').value = '';
+        document.getElementById('newUrl').value = '';
+        saveToDisk();
+        renderLinks();
+        renderEditor();
+        console.log(`[SYS] Added bookmark: ${label}`);
+    }
 };
+
 
 // --- COMMAND HINT & TAB AUTOCOMPLETE ---
 let currentSuggestion = "";
