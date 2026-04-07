@@ -749,18 +749,18 @@ document.getElementById('saveSettingsBtn').onclick = () => {
   toggleSettings(false);
 };
 
-document.getElementById('addShortcutBtn').onclick = () => {
-  const label = document.getElementById('newLabel').value.trim();
-  const url = document.getElementById('newUrl').value.trim();
-  if (label && url) {
-    appSettings.shortcuts.push({ label, url });
-    document.getElementById('newLabel').value = '';
-    document.getElementById('newUrl').value = '';
-    saveToDisk();
-    renderLinks();
-    renderEditor();
-  }
-};
+// document.getElementById('addShortcutBtn').onclick = () => {
+//   const label = document.getElementById('newLabel').value.trim();
+//   const url = document.getElementById('newUrl').value.trim();
+//   if (label && url) {
+//     appSettings.shortcuts.push({ label, url });
+//     document.getElementById('newLabel').value = '';
+//     document.getElementById('newUrl').value = '';
+//     saveToDisk();
+//     renderLinks();
+//     renderEditor();
+//   }
+// };
 
 document.getElementById('addShortcutBtn').onclick = () => {
     const label = document.getElementById('newLabel').value.trim();
