@@ -749,42 +749,31 @@ document.getElementById('saveSettingsBtn').onclick = () => {
   toggleSettings(false);
 };
 
-// document.getElementById('addShortcutBtn').onclick = () => {
-//   const label = document.getElementById('newLabel').value.trim();
-//   const url = document.getElementById('newUrl').value.trim();
-//   if (label && url) {
-//     appSettings.shortcuts.push({ label, url });
-//     document.getElementById('newLabel').value = '';
-//     document.getElementById('newUrl').value = '';
-//     saveToDisk();
-//     renderLinks();
-//     renderEditor();
-//   }
-// };
-
 document.getElementById('addShortcutBtn').onclick = () => {
-    const label = document.getElementById('newLabel').value.trim();
-    const url = document.getElementById('newUrl').value.trim();
-
-    // Check if we've already hit the 10-item limit
-    if (appSettings.shortcuts.length >= 10) {
-        // Log to your terminal so you know why it failed
-        console.warn("SYSTEM: Bookmark limit reached (Max 10).");
-        alert("Maximum of 10 bookmarks allowed.");
-        return;
-    }
-
-    if (label && url) {
-        appSettings.shortcuts.push({ label, url });
-        document.getElementById('newLabel').value = '';
-        document.getElementById('newUrl').value = '';
-        saveToDisk();
-        renderLinks();
-        renderEditor();
-        console.log(`[SYS] Added bookmark: ${label}`);
-    }
+  const label = document.getElementById('newLabel').value.trim();
+  const url = document.getElementById('newUrl').value.trim();
+  if (label && url) {
+    appSettings.shortcuts.push({ label, url });
+    document.getElementById('newLabel').value = '';
+    document.getElementById('newUrl').value = '';
+    saveToDisk();
+    renderLinks();
+    renderEditor();
+  }
 };
 
+document.getElementById('searchForm').onsubmit = (e) => {
+  e.preventDefault();
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) return;
+  if (query.startsWith('/')) {
+    handleCommand(query);
+  } else {
+    window.open(`https://duckduckgo.com/?q=${encodeURIComponent(query)}`, '_blank');
+  }
+  document.getElementById('searchInput').value = '';
+  document.getElementById('commandHint').classList.remove('visible');
+};
 
 // --- COMMAND HINT & TAB AUTOCOMPLETE ---
 let currentSuggestion = "";
@@ -996,6 +985,9 @@ function processTerminalCommand(input) {
       printLine("locate, ls, reset, setname {name}, status", "system")
       printLine("storage, uptime, wakelock, weather", "system")
       break;
+    case 'clear':
+      termOutput.innerHTML = '';
+      break;
     case 'status':
       printLine(`Theme: ${appSettings.theme}`, "system");
       printLine(`Background: ${appSettings.bgEffect}`, "system");
@@ -1057,29 +1049,16 @@ function processTerminalCommand(input) {
       }
       break;
     case 'bench':
-      const bStart = performance.now();
-      // Fixed: Removed the .draw() call on numbers
-      if (appSettings.bgEffect !== 'matrix') {
-        particles.forEach(p => p.draw());
+      const start = performance.now();
+      // We trigger one manual frame calculation
+      if (appSettings.bgEffect === 'matrix') {
+        matrixDrops.forEach(drop => drop.draw(ctx));
+      } else {
+        particles.forEach(p => p.update());
       }
-      const bEnd = performance.now();
-      printLine(`Frame Calculation: ${(bEnd - bStart).toFixed(4)}ms`, "system");
-      break;
-    case 'fetch':
-      // Using a unique variable name to prevent scope conflicts
-      const fetchLogo = [
-        "   _____              ____  _       __",
-        "  /__  / ___  _______/ __ \\(_)___  / /_",
-        "    / / / _ \\/ ___/ __ \\/_/ / / __ \\/ __/",
-        "   / /_/  __/ /  / /_/ / ____/ / / / /_  ",
-        "  /____/\\___/_/   \\____/_/   /_/ /_/\\__/ "
-      ];
-      fetchLogo.forEach(line => printLine(line, "system"));
-      printLine("--------------------------------", "user");
-      printLine(`OS: ${navigator.platform}`, "system");
-      printLine(`RES: ${window.innerWidth}x${window.innerHeight}`, "system");
-      printLine(`THEME: ${appSettings.theme.toUpperCase()}`, "system");
-      printLine(`UPTIME: ${Math.floor(performance.now() / 1000)}s`, "system");
+      const end = performance.now();
+      printLine(`Frame Calculation: ${(end - start).toFixed(4)}ms`, "system");
+      printLine(`Target: < 16.67ms (60fps)`, "system");
       break;
     case 'env':
       printLine("--- ENVIRONMENT ---", "system");
@@ -1094,6 +1073,12 @@ function processTerminalCommand(input) {
         printLine(`LAT: ${pos.coords.latitude.toFixed(4)}`, "system");
         printLine(`LON: ${pos.coords.longitude.toFixed(4)}`, "system");
       }, err => printLine(`GPS Error: ${err.message}`, "error"));
+      break;
+    case 'about':
+      printLine("ZeroPoint Terminal is a localized dashboard utility.", "system");
+      printLine("It operates within a secure browser sandbox and cannot", "system");
+      printLine("interact with your computer's file system or hardware.", "system");
+      printLine("Created for system visualization and dev-mode toggles.", "system");
       break;
     default:
       printLine(`Command not found: ${cmd}`, "error");
