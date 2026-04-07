@@ -195,22 +195,18 @@ body:has(.wl-active) #mainCard {
 .link-item {
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* Keeps icon on the left */
+    justify-content: center; /* Centers icon perfectly when collapsed */
     
-    /* FORCE SQUARE START */
-    width: 44px !important; 
-    height: 44px !important;
-    padding: 10px !important;
+    width: 40px !important; 
+    height: 40px !important;
+    padding: 0 !important; /* Remove internal padding to prevent stretching */
     
+    margin: 0; /* Ensure no external browser defaults are pushing it */
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    text-decoration: none;
-    overflow: hidden; /* This hides the text */
-    white-space: nowrap;
-    
-    /* Smooth transition for width */
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+    border-radius: 8px;
+    overflow: hidden;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 background 0.3s, 
                 box-shadow 0.3s;
 }
@@ -222,21 +218,18 @@ body:has(.wl-active) #mainCard {
     flex-shrink: 0;
 }
 
-/* Text is hidden by default */
 .link-item span {
-    margin-left: 15px;
-    color: #fff;
-    font-size: 0.9rem;
+    line-height: 1;
+    display: inline-block;
+    margin-left: 10px;
     opacity: 0;
-    transition: opacity 0.2s;
+    pointer-events: none; /* Prevents text from catching the mouse early */
 }
 
-/* --- HOVER STATE: EXPAND --- */
 .link-item:hover {
-    width: 160px !important; /* Expands to show text */
-    background: var(--glow-color);
-    border-color: var(--accent-color);
-    box-shadow: 0 0 15px var(--glow-color);
+    width: 140px !important;
+    justify-content: flex-start; /* Slides icon to left on hover */
+    padding-left: 10px !important; /* Adds back space for the icon only on hover */
 }
 
 .link-item:hover span {
