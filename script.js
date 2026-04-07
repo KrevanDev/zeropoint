@@ -237,12 +237,31 @@ function applyTheme(theme) {
   document.getElementById('mainCard').style.boxShadow = `0 8px 32px 0 rgba(0, 0, 0, 0.6), 0 0 20px ${selected.glow}`;
 }
 
-// --- WEATHER SYSTEM ---
+// --- WEATHER SYSTEM WITH SMART CACHING ---
 async function getWeatherData() {
   const locEl = document.getElementById('weatherLoc');
   const tempEl = document.getElementById('weatherTemp');
   const handleError = (msg) => { locEl.textContent = msg; tempEl.textContent = "--"; };
 
+  // 1. Check LocalStorage Cache first
+  const cached = localStorage.getItem('weatherCache');
+  if (cached) {
+    try {
+      const cacheData = JSON.parse(cached);
+      const now = Date.now();
+      // Only use cache if it is less than 15 minutes old (900,000 ms)
+      if (now - cacheData.timestamp < 3600000) {
+        lastWeatherData = cacheData.data;
+        locEl.textContent = lastWeatherData.city;
+        displayWeather();
+        return; // Exit function early, no API calls needed
+      }
+    } catch (e) {
+      console.warn("Weather cache corrupt, fetching fresh data...");
+    }
+  }
+
+  // 2. If no cache or cache expired, proceed with standard fetch
   if (!navigator.geolocation) return handleError("Not Supported");
 
   navigator.geolocation.getCurrentPosition(async (position) => {
@@ -257,6 +276,12 @@ async function getWeatherData() {
 
       const city = geoData.address.city || geoData.address.town || geoData.address.village || "Nearby";
       lastWeatherData = { tempC: weatherData.current_weather.temperature, code: weatherData.current_weather.weathercode, city };
+
+      // 3. Save the fresh data to cache with a timestamp
+      localStorage.setItem('weatherCache', JSON.stringify({
+        timestamp: Date.now(),
+        data: lastWeatherData
+      }));
 
       locEl.textContent = city;
       displayWeather();
@@ -676,21 +701,267 @@ document.getElementById('searchInput').addEventListener('keydown', (e) => {
   }
 });
 
-// Wake Lock Handler
+// --- SYSTEM TERMINAL ENGINE ---
+const termDrawer = document.getElementById('terminalDrawer');
+const termInput = document.getElementById('terminalInput');
+const termOutput = document.getElementById('terminalOutput');
+
+// --- TERMINAL INITIALIZATION & DISCLAIMER ---
+let terminalInitialized = localStorage.getItem('zpt_terminal_init') === 'true';
+
+function showTerminalDisclaimer() {
+  const output = document.getElementById('terminalOutput');
+
+  const disclaimer = [
+    "--------------------------------------------------",
+    "ZPT // SYSTEM TERMINAL v1.0.4",
+    "SECURITY NOTICE: RESTRICTED ACCESS ENVIRONMENT",
+    "--------------------------------------------------",
+    "NOTE: This terminal is a sandboxed simulation designed",
+    "for system monitoring and dashboard configuration.",
+    "Internal commands only. No direct OS hooks enabled.",
+    "--------------------------------------------------",
+    "Type 'help' to begin.",
+    ""
+  ];
+
+  disclaimer.forEach((line, i) => {
+    setTimeout(() => {
+      printLine(line, 'system');
+    }, i * 100); // Staggered typing effect
+  });
+
+  localStorage.setItem('zpt_terminal_init', 'true');
+  terminalInitialized = true;
+}
+
+// Update your toggle listener to trigger the disclaimer
+document.addEventListener('keydown', (e) => {
+  if (e.key === '`') {
+    e.preventDefault();
+    termDrawer.classList.toggle('open');
+
+    if (termDrawer.classList.contains('open')) {
+      termInput.focus();
+      // Show disclaimer only on the very first open
+      if (!terminalInitialized) {
+        showTerminalDisclaimer();
+      }
+    }
+  }
+});
+
+// --- CONSOLE INTERCEPTION ---
+const originalLog = console.log;
+const originalWarn = console.warn;
+const originalError = console.error;
+
+console.log = (...args) => {
+  originalLog(...args);
+  printLine(`[LOG] ${args.join(' ')}`, 'system');
+};
+
+console.warn = (...args) => {
+  originalWarn(...args);
+  printLine(`[WARN] ${args.join(' ')}`, 'warn');
+};
+
+console.error = (...args) => {
+  originalError(...args);
+  printLine(`[ERROR] ${args.join(' ')}`, 'error');
+};
+
+// --- NETWORK INTERCEPTION ---
+const originalFetch = window.fetch;
+
+window.fetch = async (...args) => {
+  const url = args[0];
+  const options = args[1] || {};
+  const method = options.method || 'GET';
+
+  // Log the outgoing request
+  console.log(`[NET] FETCH ${method} -> ${url.substring(0, 50)}...`);
+
+  try {
+    const response = await originalFetch(...args);
+
+    // Log the result
+    if (response.ok) {
+      console.log(`[NET] 200 OK: ${url.substring(0, 30)}...`);
+    } else {
+      console.warn(`[NET] ${response.status} Error: ${url.substring(0, 30)}...`);
+    }
+
+    return response;
+  } catch (error) {
+    console.error(`[NET] FAILED: ${url.substring(0, 30)}... | ${error.message}`);
+    throw error;
+  }
+};
+
+// // 1. Toggle with Backtick (`)
+// document.addEventListener('keydown', (e) => {
+//   if (e.key === '`') {
+//     e.preventDefault();
+//     termDrawer.classList.toggle('open');
+//     if (termDrawer.classList.contains('open')) termInput.focus();
+//   }
+// });
+
+// 2. Command Processor
+termInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const fullCmd = termInput.value.trim();
+    termInput.value = '';
+    if (!fullCmd) return;
+
+    printLine(`> ${fullCmd}`, 'user');
+    processTerminalCommand(fullCmd);
+  }
+});
+
+function printLine(text, type = '') {
+  const line = document.createElement('div');
+  line.className = `terminal-line ${type}`;
+  line.textContent = text;
+  termOutput.appendChild(line);
+  termOutput.scrollTop = termOutput.scrollHeight;
+}
+
+function processTerminalCommand(input) {
+  const [cmd, ...args] = input.toLowerCase().split(' ');
+
+  switch (cmd) {
+    case 'help':
+      printLine("Available: clear, status, config, setname [name], reset, weather, ls, uptime, clear, wakelock, storage, exit, bench, env, locate", "system");
+      break;
+    case 'clear':
+      termOutput.innerHTML = '';
+      break;
+    case 'status':
+      printLine(`Theme: ${appSettings.theme}`, "system");
+      printLine(`Background: ${appSettings.bgEffect}`, "system");
+      printLine(`Weather Cache: ${localStorage.getItem('weatherCache') ? 'Active' : 'Empty'}`, "system");
+      break;
+    case 'config':
+      printLine(JSON.stringify(appSettings, null, 2));
+      break;
+    case 'setname':
+      if (args[0]) {
+        appSettings.userName = args[0];
+        saveToDisk();
+        printLine(`Username updated to: ${args[0]}`, "system");
+      }
+      break;
+    case 'reset':
+      if (confirm("Wipe all settings and data?")) {
+        localStorage.clear();
+        location.reload();
+      }
+      break;
+    case 'weather':
+      printLine("Fetching fresh weather data (bypassing cache)...", "system");
+      localStorage.removeItem('weatherCache'); // Clear cache to force fetch
+      getWeatherData();
+      break;
+    case 'ls':
+      printLine("--- ACTIVE SHORTCUTS ---", "system");
+      appSettings.shortcuts.forEach(s => printLine(`${s.label} -> ${s.url}`));
+      break;
+    case 'uptime':
+      const seconds = Math.floor(performance.now() / 1000);
+      const mins = Math.floor(seconds / 60);
+      printLine(`Session Uptime: ${mins}m ${seconds % 60}s`, "system");
+      break;
+    case 'clear':
+      termOutput.innerHTML = '';
+      printLine("Terminal cleared.", "system");
+      break;
+    case 'wakelock':
+      printLine(`Status: ${wakeLock ? "ACTIVE" : "INACTIVE"}`, "system");
+      break;
+    case 'storage':
+      const used = JSON.stringify(localStorage).length;
+      printLine(`Local Storage Used: ${(used / 1024).toFixed(2)} KB`, "system");
+      break;
+    case 'exit':
+      termDrawer.classList.remove('open');
+      break;
+    case 'net':
+      printLine("--- NETWORK DIAGNOSTICS ---", "system");
+      printLine(`Online Status: ${navigator.onLine ? "ONLINE" : "OFFLINE"}`, "system");
+      printLine(`User Agent: ${navigator.userAgent.substring(0, 50)}...`, "system");
+      // Check if we have a weather cache to see when the last real network call was
+      const cache = localStorage.getItem('weatherCache');
+      if (cache) {
+        const age = Math.round((Date.now() - JSON.parse(cache).timestamp) / 60000);
+        printLine(`Last Weather API Call: ${age} mins ago`, "system");
+      }
+      break;
+    case 'bench':
+      const start = performance.now();
+      // We trigger one manual frame calculation
+      if (appSettings.bgEffect === 'matrix') {
+        matrixDrops.forEach(drop => drop.draw(ctx));
+      } else {
+        particles.forEach(p => p.update());
+      }
+      const end = performance.now();
+      printLine(`Frame Calculation: ${(end - start).toFixed(4)}ms`, "system");
+      printLine(`Target: < 16.67ms (60fps)`, "system");
+      break;
+    case 'env':
+      printLine("--- ENVIRONMENT ---", "system");
+      printLine(`OS: ${navigator.platform}`, "system");
+      printLine(`Display: ${window.screen.width}x${window.screen.height}`, "system");
+      printLine(`Language: ${navigator.language}`, "system");
+      printLine(`Reduced Motion: ${window.matchMedia('(prefers-reduced-motion: reduce)').matches}`, "system");
+      break;
+    case 'locate':
+      printLine("Accessing GPS...", "system");
+      navigator.geolocation.getCurrentPosition(pos => {
+        printLine(`LAT: ${pos.coords.latitude.toFixed(4)}`, "system");
+        printLine(`LON: ${pos.coords.longitude.toFixed(4)}`, "system");
+      }, err => printLine(`GPS Error: ${err.message}`, "error"));
+      break;
+    case 'about':
+      printLine("ZeroPoint Terminal is a localized dashboard utility.", "system");
+      printLine("It operates within a secure browser sandbox and cannot", "system");
+      printLine("interact with your computer's file system or hardware.", "system");
+      printLine("Created for system visualization and dev-mode toggles.", "system");
+      break;
+    default:
+      printLine(`Command not found: ${cmd}`, "error");
+  }
+}
+
+// Locate your wakeLockBtn.onclick and add these console.log points:
 document.getElementById('wakeLockBtn').onclick = async () => {
   const btn = document.getElementById('wakeLockBtn');
   if (!wakeLock) {
     try {
       wakeLock = await navigator.wakeLock.request('screen');
+      console.log("Wake Lock acquired successfully."); // This now appears in terminal
       btn.classList.add('wl-active');
-      wakeLock.addEventListener('release', () => { if (wakeLock) btn.classList.remove('wl-active'); });
-    } catch (e) { }
-  } else { wakeLock.release(); wakeLock = null; btn.classList.remove('wl-active'); }
+      wakeLock.addEventListener('release', () => {
+        if (wakeLock) {
+          btn.classList.remove('wl-active');
+          console.warn("clearWake Lock was released."); // This now appears in terminal
+        }
+      });
+    } catch (e) {
+      console.error("Wake Lock request failed: " + e.message);
+    }
+  } else {
+    wakeLock.release();
+    wakeLock = null;
+    btn.classList.remove('wl-active');
+  }
 };
 
 // Initialize App
+setInterval(() => { if (!isTimerMode) updateClock(); }, 1000);
 initCanvas();
 animateBg();
-setInterval(() => { if (!isTimerMode) updateClock(); }, 1000);
 updateClock();
 loadSettings();

@@ -268,6 +268,60 @@ body:has(.wl-active) #mainCard {
 }
 .modal-backdrop.active { opacity: 1; visibility: visible; }
 
+/* --- System Terminal --- */
+.terminal-drawer {
+    position: fixed;
+    bottom: -350px; /* Hidden by default */
+    left: 0;
+    width: 100%;
+    height: 300px;
+    background: rgba(5, 10, 5, 0.95);
+    border-top: 2px solid var(--accent-color);
+    z-index: 3000;
+    transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    padding: 10px 20px;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.terminal-drawer.open { bottom: 0; }
+
+.terminal-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--accent-color);
+    margin-bottom: 10px;
+    opacity: 0.7;
+}
+
+.terminal-output {
+    flex-grow: 1;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.terminal-line.system { color: var(--accent-color); }
+.terminal-line.warn { color: #ffae00; font-style: italic; }
+.terminal-line.error { color: #ff4444; }
+.terminal-line.user { color: #888; }
+.terminal-line.net { color: #00d4ff; font-weight: bold; }
+
+.terminal-input-line { display: flex; gap: 10px; align-items: center; }
+.prompt { color: var(--accent-color); font-weight: bold; }
+#terminalInput {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.85rem;
+    width: 100%;
+    outline: none;
+}
+
 /* --- Special States --- */
 body.zen-active .container { opacity: 0; pointer-events: none; }
 
