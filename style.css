@@ -183,11 +183,13 @@ body:has(.wl-active) #mainCard {
 #linksGrid {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px; /* Reduced gap for a tighter look */
     justify-content: center;
-    padding: 20px;
+    padding: 10px 0; /* Minimized top/bottom padding */
     width: 100%;
+    margin-top: -5px; /* Slight pull-up to align closer to the clock/weather */
 }
+
 
 /* The Square Button (Idle State) */
 .link-item {
