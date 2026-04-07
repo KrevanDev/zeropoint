@@ -1093,7 +1093,9 @@ document.getElementById('wakeLockBtn').onclick = async () => {
       wakeLock.addEventListener('release', () => {
         if (wakeLock) {
           btn.classList.remove('wl-active');
-          console.warn("clearWake Lock was released."); // This now appears in terminal
+          console.warn("Wake Lock was released."); // This now appears in terminal
+          wakeLock = null;
+          btn.classList.remove('wl-active');
         }
       });
     } catch (e) {
