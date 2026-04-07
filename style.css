@@ -179,54 +179,70 @@ body:has(.wl-active) #mainCard {
 .command-floating-hint.visible { opacity: 1; }
 
 /* --- Shortcuts Grid --- */
+/* Container: Remove grid-template-columns if you had it */
 #linksGrid {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 12px;
     justify-content: center;
     padding: 20px;
+    width: 100%;
 }
-.links-grid { 
-    display: grid; 
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 15px; 
-}
+
+/* The Square Button (Idle State) */
 .link-item {
     display: flex;
     align-items: center;
+    justify-content: flex-start; /* Keeps icon on the left */
+    
+    /* FORCE SQUARE START */
+    width: 44px !important; 
+    height: 44px !important;
+    padding: 10px !important;
+    
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 10px;
-    border-radius: 12px;
+    border-radius: 10px;
     text-decoration: none;
-    color: white;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    overflow: hidden;
+    overflow: hidden; /* This hides the text */
     white-space: nowrap;
-    max-width: 44px;
+    
+    /* Smooth transition for width */
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                background 0.3s, 
+                box-shadow 0.3s;
 }
+
+/* Icon stays fixed size */
 .link-item img {
-    width: 24px;
-    height: 24px;
+    width: 24px !important;
+    height: 24px !important;
     flex-shrink: 0;
 }
+
+/* Text is hidden by default */
 .link-item span {
-    margin-left: 10px;
+    margin-left: 15px;
+    color: #fff;
+    font-size: 0.9rem;
     opacity: 0;
-    transition: opacity 0.3s ease;
-    font-weight: 500;
+    transition: opacity 0.2s;
 }
-.link-item:active { 
-    cursor: grabbing; 
-}
+
+/* --- HOVER STATE: EXPAND --- */
 .link-item:hover {
-    max-width: 250px; /* Adjust based on your longest label */
+    width: 160px !important; /* Expands to show text */
     background: var(--glow-color);
     border-color: var(--accent-color);
     box-shadow: 0 0 15px var(--glow-color);
 }
+
 .link-item:hover span {
     opacity: 1;
+}
+
+.link-item:active { 
+    cursor: grabbing; 
 }
 .link-item.dragging { opacity: 0.4; transform: scale(0.95); }
 .link-item.drag-over { border: 2px dashed var(--accent-color); background: rgba(255, 255, 255, 0.1); }
