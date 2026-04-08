@@ -1015,6 +1015,68 @@ const terminalCommands = {
       printLine("Wake Lock disabled", "system");
     }
   },
+
+  work: {
+    on: async () => {
+      // --- ZEN ---
+      if (!document.body.classList.contains('zen-active')) {
+        document.body.classList.add('zen-active');
+  
+        const exitZen = () => {
+          document.body.classList.remove('zen-active');
+          document.removeEventListener('keydown', exitZen);
+          document.removeEventListener('click', exitZen);
+        };
+  
+        setTimeout(() => {
+          document.addEventListener('keydown', exitZen);
+          document.addEventListener('click', exitZen);
+        }, 500);
+      }
+  
+      // --- WAKE LOCK ---
+      if (!wakeLock) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          document.getElementById('wakeLockBtn').classList.add('wl-active');
+          wakeLock.addEventListener('release', () => {
+            wakeLock = null;
+            document.getElementById('wakeLockBtn').classList.remove('wl-active');
+          });
+        } catch (e) {
+          printLine(`Wake Lock failed: ${e.message}`, "error");
+        }
+      }
+  
+      printLine("Work mode enabled (Zen + Wake Lock)", "system");
+  
+      // --- CLOSE TERMINAL ---
+      termDrawer.classList.remove('open');
+    },
+  
+    off: () => {
+      // Disable Zen
+      if (document.body.classList.contains('zen-active')) {
+        document.body.classList.remove('zen-active');
+      }
+  
+      // Disable Wake Lock
+      if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+        document.getElementById('wakeLockBtn').classList.remove('wl-active');
+      }
+  
+      printLine("Work mode disabled", "system");
+    },
+  
+    status: () => {
+      printLine(
+        `Work mode → Zen: ${document.body.classList.contains('zen-active') ? 'ON' : 'OFF'}, Wake: ${wakeLock ? 'ON' : 'OFF'}`,
+        "system"
+      );
+    }
+  },
 };
 
 // --- DEV MODE FLAG ---
@@ -1104,7 +1166,9 @@ function processTerminalCommand(input) {
   if (terminalCommands[cmd]) {
     const domain = terminalCommands[cmd];
   
-    if (domain[subcmd]) {
+    if (!subcmd && domain.on) {
+      domain.on();
+    } else if (domain[subcmd]) {
       domain[subcmd](...args);
     } else {
       printLine(`Unknown subcommand: ${cmd} ${subcmd}`, "error");
