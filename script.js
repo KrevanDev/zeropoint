@@ -738,42 +738,78 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
     }
   } else if (parts.length === 2) {
     // Tier 2: Secondary options based on the base command
-    if (cmd === '/theme') {
-      const matches = themes.filter(t => t.startsWith(arg));
-      if (matches.length > 0) {
-        hint.classList.add('visible');
-        hint.innerHTML = `
-          <div class="hint-title">Themes</div>
-          <div class="hint-grid">
-            ${matches
-              .map((theme, i) =>
-                `<span class="hint-item ${i === 0 ? 'primary' : 'secondary'}">${theme}</span>`
-              )
-              .join('')}
-            ${allMatches.length > matches.length ? '<span class="hint-item secondary">…</span>' : ''}
-          </div>
-        `;
-        currentSuggestion = `${cmd} ${matches[0]}`;
-        hint.classList.add('visible');
-      } else {
-        hint.classList.remove('visible');
-      }
-    } else if (cmd === '/bg') {
-      const matches = backgrounds.filter(b => b.startsWith(arg));
-      if (matches.length > 0) {
-        hint.classList.add('visible');
-        hint.textContent = `Backgrounds: ${matches.join(', ')}`;
-        currentSuggestion = `${cmd} ${matches[0]}`;
-      } else {
-        hint.classList.remove('visible');
-      }
-    } else if (cmd === '/timer') {
-      hint.classList.add('visible');
-      hint.textContent = "Enter minutes (e.g., /timer 25)";
-    } else {
-      hint.classList.remove('visible'); // Hides for /zen or unknown commands
-    }
+
+
+if (cmd === '/theme') {
+  const allMatches = themes.filter(t => t.startsWith(arg));
+  const matches = allMatches.slice(0, 6);
+
+  if (matches.length > 0) {
+    hint.innerHTML = `
+      <div class="hint-title">Themes</div>
+      <div class="hint-grid">
+        ${matches
+          .map((theme, i) =>
+            `<span class="hint-item ${i === 0 ? 'primary' : 'secondary'}">${theme}</span>`
+          )
+          .join('')}
+        ${allMatches.length > matches.length
+          ? '<span class="hint-item secondary">…</span>'
+          : ''}
+      </div>
+    `;
+
+    currentSuggestion = `${cmd} ${matches[0]}`;
+    hint.classList.add('visible');
   } else {
+    hint.classList.remove('visible');
+  }
+} else if (cmd === '/bg') {
+  const allMatches = backgrounds.filter(b => b.startsWith(arg));
+  const matches = allMatches.slice(0, 6);
+
+  if (matches.length > 0) {
+    hint.innerHTML = `
+      <div class="hint-title">Backgrounds</div>
+      <div class="hint-grid">
+        ${matches
+          .map((bg, i) =>
+            `<span class="hint-item ${i === 0 ? 'primary' : 'secondary'}">${bg}</span>`
+          )
+          .join('')}
+        ${allMatches.length > matches.length
+          ? '<span class="hint-item secondary">…</span>'
+          : ''}
+      </div>
+    `;
+
+    currentSuggestion = `${cmd} ${matches[0]}`;
+    hint.classList.add('visible');
+  } else {
+    hint.classList.remove('visible');
+  }
+} else if (cmd === '/timer') {
+  hint.innerHTML = `
+    <div class="hint-title">Timer</div>
+    <div class="hint-grid">
+      <span class="hint-item primary">/timer 25</span>
+      <span class="hint-item secondary">/timer 45</span>
+      <span class="hint-item secondary">/timer 60</span>
+    </div>
+  `;
+  hint.classList.add('visible');
+} else if (cmd === '/zen') {
+  hint.innerHTML = `
+    <div class="hint-title">Zen Mode</div>
+    <div class="hint-grid">
+      <span class="hint-item primary">Activate</span>
+      <span class="hint-item secondary">Press any key to exit</span>
+    </div>
+  `;
+  hint.classList.add('visible');
+}
+
+
     // Tier 3: Typing beyond the required parameters
     hint.classList.remove('visible');
   }
