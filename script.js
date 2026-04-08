@@ -739,10 +739,13 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
   } else if (parts.length === 2) {
     // Tier 2: Secondary options based on the base command
     if (cmd === '/theme') {
-      const matches = themes.filter(t => t.startsWith(arg));
+      const matches = themes
+        .filter(t => t.startsWith(arg))
+        .slice(0, 4);
       if (matches.length > 0) {
         hint.classList.add('visible');
-        hint.textContent = `Themes: ${matches.join(', ')}`;
+        hint.textContent = 
+          `Themes: ${matches.join(', ')}${totalMatches > matches.length ? '…' : ''}`;
         currentSuggestion = `${cmd} ${matches[0]}`;
       } else {
         hint.classList.remove('visible');
