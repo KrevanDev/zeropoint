@@ -180,7 +180,7 @@ body:has(.wl-active) #mainCard {
 
 .command-floating-hint .hint-grid {
   display: grid;
-  grid-template-columns: repeat(5, auto);
+  grid-template-columns: repeat(7, auto);
   gap: 6px 10px;
   justify-content: center;
 }
