@@ -1042,6 +1042,7 @@ function processTerminalCommand(input) {
         "system"
       )
       break;
+    }
     case 'status':
       const wc = loadWeatherCacheFromStorage();
       printLine(`Theme: ${appSettings.theme}`, "system");
