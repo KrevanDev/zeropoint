@@ -740,6 +740,7 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
     // Tier 2: Secondary options based on the base command
     if (cmd === '/theme') {
       const matches = themes
+        const totalMatches = themes.filter(t => t.startsWith(arg)).length;
         .filter(t => t.startsWith(arg))
         .slice(0, 4);
       if (matches.length > 0) {
