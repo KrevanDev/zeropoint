@@ -827,8 +827,187 @@ function printLine(text, type = '') {
   termOutput.scrollTop = termOutput.scrollHeight;
 }
 
+//ANCHOR - Terminal
+
+// --- COMMAND REGISTRY ---
+const terminalCommands = {
+  theme: {
+    set: (name) => {
+      if (!THEMES[name]) {
+        printLine(`Unknown theme: ${name}`, "error");
+        return;
+      }
+      appSettings.theme = name;
+      applyTheme(name);
+      saveToDisk();
+      printLine(`Theme set to ${name}`, "system");
+    },
+    list: () => {
+      printLine("Available themes:", "system");
+      THEME_NAMES.forEach(t => printLine(`- ${t}`));
+    }
+  },
+
+  bg: {
+    set: (name) => {
+      if (!BACKGROUNDS[name]) {
+        printLine(`Unknown background: ${name}`, "error");
+        return;
+      }
+      appSettings.bgEffect = name;
+      initCanvas();
+      saveToDisk();
+      printLine(`Background set to ${name}`, "system");
+    },
+    list: () => {
+      printLine("Available backgrounds:", "system");
+      BACKGROUND_NAMES.forEach(b => printLine(`- ${b}`));
+    }
+  },
+
+  name: {
+    set: (value) => {
+      if (!value) {
+        printLine("Usage: name set <value>", "warn");
+        return;
+      }
+      appSettings.userName = value;
+      saveToDisk();
+      updateClock();
+      printLine(`Username set to ${value}`, "system");
+    }
+  },
+  
+  timer: {
+    set: (value) => {
+      const minutes = parseInt(value, 10);
+      if (isNaN(minutes) || minutes <= 0) {
+        printLine("Usage: timer set <minutes>", "warn");
+        return;
+      }
+      lastSetTimerMinutes = minutes;
+      timerSecs = minutes * 60;
+      updateClock();
+      saveToDisk();
+      printLine(`Timer duration set to ${minutes} minutes`, "system");
+    },
+  
+    start: () => {
+      if (isRunning) {
+        printLine("Timer already running", "warn");
+        return;
+      }
+      isTimerMode = true;
+      document.getElementById('mainCard').classList.add('timer-mode');
+      document.getElementById('timerStartBtn').click();
+      printLine("Timer started", "system");
+    },
+  
+    stop: () => {
+      if (!isRunning) {
+        printLine("Timer is not running", "warn");
+        return;
+      }
+      document.getElementById('timerStartBtn').click();
+      printLine("Timer paused", "system");
+    },
+  
+    reset: () => {
+      resetTimer();
+      printLine("Timer reset", "system");
+    },
+  
+    status: () => {
+      const mins = Math.floor(timerSecs / 60);
+      const secs = timerSecs % 60;
+      printLine(
+        `Timer: ${isRunning ? "RUNNING" : "STOPPED"} | ${mins}m ${secs}s`,
+        "system"
+      );
+    },      
+
+    zen: {
+      on: () => {
+        if (document.body.classList.contains('zen-active')) {
+          printLine("Zen mode already active", "warn");
+          return;
+        }
+        document.body.classList.add('zen-active');
+        printLine("Zen mode enabled", "system");
+      },
+    
+      off: () => {
+        if (!document.body.classList.contains('zen-active')) {
+          printLine("Zen mode is not active", "warn");
+          return;
+        }
+        document.body.classList.remove('zen-active');
+        printLine("Zen mode disabled", "system");
+      },
+    
+      toggle: () => {
+        document.body.classList.toggle('zen-active');
+        printLine(
+          `Zen mode ${document.body.classList.contains('zen-active') ? "enabled" : "disabled"}`,
+          "system"
+        );
+      }
+    },
+
+    wake: {
+      on: async () => {
+        if (wakeLock) {
+          printLine("Wake Lock already active", "warn");
+          return;
+        }
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          document.getElementById('wakeLockBtn').classList.add('wl-active');
+          printLine("Wake Lock enabled", "system");
+    
+          wakeLock.addEventListener('release', () => {
+            wakeLock = null;
+            document.getElementById('wakeLockBtn').classList.remove('wl-active');
+            printLine("Wake Lock released", "warn");
+          });
+        } catch (e) {
+          printLine(`Wake Lock failed: ${e.message}`, "error");
+        }
+      },
+    
+      off: () => {
+        if (!wakeLock) {
+          printLine("Wake Lock is not active", "warn");
+          return;
+        }
+        wakeLock.release();
+        wakeLock = null;
+        document.getElementById('wakeLockBtn').classList.remove('wl-active');
+        printLine("Wake Lock disabled", "system");
+      },
+    
+      status: () => {
+        printLine(`Wake Lock: ${wakeLock ? "ACTIVE" : "INACTIVE"}`, "system");
+      }
+    },
+
+
+};
+
+
 function processTerminalCommand(input) {
-  const [cmd, ...args] = input.toLowerCase().split(' ');
+  const [cmd, subcmd, ...args] = input.toLowerCase().split(' ');
+
+  if (terminalCommands[cmd]) {
+    const domain = terminalCommands[cmd];
+  
+    if (domain[subcmd]) {
+      domain[subcmd](...args);
+    } else {
+      printLine(`Unknown subcommand: ${cmd} ${subcmd}`, "error");
+    }
+    return;
+  }
 
   switch (cmd) {
     case 'help':
@@ -836,9 +1015,6 @@ function processTerminalCommand(input) {
       printLine("bench, clear, config, env, exit", "system")
       printLine("locate, ls, reset, setname {name}, status", "system")
       printLine("storage, uptime, wakelock, weather", "system")
-      break;
-    case 'clear':
-      termOutput.innerHTML = '';
       break;
     case 'status':
       const wc = loadWeatherCacheFromStorage();
