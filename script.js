@@ -50,7 +50,7 @@ class Particle {
     this.speedY = Math.random() * 0.5 - 0.25;
     this.angle = Math.random() * 360;
     this.spin = Math.random() < 0.5 ? 1 : -1;
-    this.points = Math.floor(Math.random() * 3) + 5;
+    this.points = Math.floor(Math.random() * 3) + 3;
     this.rotation = Math.random() * Math.PI * 2;
     this.bubbleSpeed = Math.random() * 1 + 0.5;
   }
