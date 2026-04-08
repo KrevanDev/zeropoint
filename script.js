@@ -281,6 +281,7 @@ function loadSettings() {
   renderTodos();
   getWeatherData();
   updateTimerDuration();
+  initCanvas();
 }
 
 function applyTheme(theme) {
@@ -304,7 +305,6 @@ async function getWeatherData() {
   const tempEl = document.getElementById('weatherTemp');
   const handleError = (msg) => { locEl.textContent = msg; tempEl.textContent = "--"; };
 
-  // 1. Check LocalStorage Cache first
   const cached = loadWeatherCacheFromStorage();
   if (cached) {
     try {
@@ -898,7 +898,7 @@ function processTerminalCommand(input) {
     case 'status':
       printLine(`Theme: ${appSettings.theme}`, "system");
       printLine(`Background: ${appSettings.bgEffect}`, "system");
-      printLine(`Weather Cache: ${localStorage.getItem('weatherCache') ? 'Active' : 'Empty'}`, "system");
+      printLine(`Weather Cache: ${weatherCache ? 'Active' : 'Empty'}`, "system");
       break;
     case 'config':
       printLine(JSON.stringify(appSettings, null, 2));
@@ -912,7 +912,9 @@ function processTerminalCommand(input) {
       break;
     case 'reset':
       if (confirm("Wipe all settings and data?")) {
-        localStorage.clear();
+        clearWeatherCacheFromStorage();
+        saveSettingsToStorage(null);
+        saveTodosToStorage([]);
         location.reload();
       }
       break;
@@ -938,8 +940,15 @@ function processTerminalCommand(input) {
       printLine(`Status: ${wakeLock ? "ACTIVE" : "INACTIVE"}`, "system");
       break;
     case 'storage':
-      const used = JSON.stringify(localStorage).length;
-      printLine(`Local Storage Used: ${(used / 1024).toFixed(2)} KB`, "system");
+      let totalBytes = 0;
+      const settings = loadSettingsFromStorage();
+      const todos = loadTodosFromStorage();
+      const weather = loadWeatherCacheFromStorage();
+      if (settings) totalBytes += JSON.stringify(settings).length;
+      if (todos) totalBytes += JSON.stringify(todos).length;
+      if (weather) totalBytes += JSON.stringify(weather).length;
+      const kb = (totalBytes / 1024).toFixed(2);
+      printLine(`Storage Used: ${kb} KB`, "system")
       break;
     case 'exit':
       termDrawer.classList.remove('open');
@@ -948,11 +957,12 @@ function processTerminalCommand(input) {
       printLine("--- NETWORK DIAGNOSTICS ---", "system");
       printLine(`Online Status: ${navigator.onLine ? "ONLINE" : "OFFLINE"}`, "system");
       printLine(`User Agent: ${navigator.userAgent.substring(0, 50)}...`, "system");
-      // Check if we have a weather cache to see when the last real network call was
-      const cache = localStorage.getItem('weatherCache');
-      if (cache) {
-        const age = Math.round((Date.now() - JSON.parse(cache).timestamp) / 60000);
+      const cache = loadWeatherCacheFromStorage();
+      if (cache && cache.timestamp) {
+        const age = Math.round((Date.now() - cache.timestamp) / 3600000);
         printLine(`Last Weather API Call: ${age} mins ago`, "system");
+      } else {
+        printLine("No weather cache available", "system")
       }
       break;
     case 'bench':
