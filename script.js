@@ -877,7 +877,7 @@ const terminalCommands = {
       printLine(`Username set to ${value}`, "system");
     }
   },
-  
+
   timer: {
     set: (value) => {
       const minutes = parseInt(value, 10);
@@ -924,75 +924,76 @@ const terminalCommands = {
         `Timer: ${isRunning ? "RUNNING" : "STOPPED"} | ${mins}m ${secs}s`,
         "system"
       );
-    },      
+    }
+  },
 
-    zen: {
-      on: () => {
-        if (document.body.classList.contains('zen-active')) {
-          printLine("Zen mode already active", "warn");
-          return;
-        }
-        document.body.classList.add('zen-active');
-        printLine("Zen mode enabled", "system");
-      },
-    
-      off: () => {
-        if (!document.body.classList.contains('zen-active')) {
-          printLine("Zen mode is not active", "warn");
-          return;
-        }
-        document.body.classList.remove('zen-active');
-        printLine("Zen mode disabled", "system");
-      },
-    
-      toggle: () => {
-        document.body.classList.toggle('zen-active');
-        printLine(
-          `Zen mode ${document.body.classList.contains('zen-active') ? "enabled" : "disabled"}`,
-          "system"
-        );
+  zen: {
+    on: () => {
+      if (document.body.classList.contains('zen-active')) {
+        printLine("Zen mode already active", "warn");
+        return;
+      }
+      document.body.classList.add('zen-active');
+      printLine("Zen mode enabled", "system");
+    },
+  
+    off: () => {
+      if (!document.body.classList.contains('zen-active')) {
+        printLine("Zen mode is not active", "warn");
+        return;
+      }
+      document.body.classList.remove('zen-active');
+      printLine("Zen mode disabled", "system");
+    },
+  
+    toggle: () => {
+      document.body.classList.toggle('zen-active');
+      printLine(
+        `Zen mode ${document.body.classList.contains('zen-active') ? "enabled" : "disabled"}`,
+        "system"
+      );
+    }
+  },
+
+  wake: {
+    on: async () => {
+      if (wakeLock) {
+        printLine("Wake Lock already active", "warn");
+        return;
+      }
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        document.getElementById('wakeLockBtn').classList.add('wl-active');
+        printLine("Wake Lock enabled", "system");
+  
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+          document.getElementById('wakeLockBtn').classList.remove('wl-active');
+          printLine("Wake Lock released", "warn");
+        });
+      } catch (e) {
+        printLine(`Wake Lock failed: ${e.message}`, "error");
       }
     },
-
-    wake: {
-      on: async () => {
-        if (wakeLock) {
-          printLine("Wake Lock already active", "warn");
-          return;
-        }
-        try {
-          wakeLock = await navigator.wakeLock.request('screen');
-          document.getElementById('wakeLockBtn').classList.add('wl-active');
-          printLine("Wake Lock enabled", "system");
-    
-          wakeLock.addEventListener('release', () => {
-            wakeLock = null;
-            document.getElementById('wakeLockBtn').classList.remove('wl-active');
-            printLine("Wake Lock released", "warn");
-          });
-        } catch (e) {
-          printLine(`Wake Lock failed: ${e.message}`, "error");
-        }
-      },
-    
-      off: () => {
-        if (!wakeLock) {
-          printLine("Wake Lock is not active", "warn");
-          return;
-        }
-        wakeLock.release();
-        wakeLock = null;
-        document.getElementById('wakeLockBtn').classList.remove('wl-active');
-        printLine("Wake Lock disabled", "system");
-      },
-    
-      status: () => {
-        printLine(`Wake Lock: ${wakeLock ? "ACTIVE" : "INACTIVE"}`, "system");
+  
+    off: () => {
+      if (!wakeLock) {
+        printLine("Wake Lock is not active", "warn");
+        return;
       }
+      wakeLock.release();
+      wakeLock = null;
+      document.getElementById('wakeLockBtn').classList.remove('wl-active');
+      printLine("Wake Lock disabled", "system");
     },
+  
+    status: () => {
+      printLine(`Wake Lock: ${wakeLock ? "ACTIVE" : "INACTIVE"}`, "system");
+    }
+  },
 
 
-};
+
 
 
 function processTerminalCommand(input) {
