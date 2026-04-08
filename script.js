@@ -999,7 +999,12 @@ const terminalCommands = {
 
 // --- DEV MODE FLAG ---
 const DEV_MODE = new URLSearchParams(window.location.search).has('dev');
-
+if (DEV_MODE) {
+  const badge = document.createElement('div');
+  badge.id = 'devBadge';
+  badge.textContent = 'DEV';
+  document.body.appendChild(badge);
+}
 
 const devTerminalCommands = {
   dev: {
