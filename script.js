@@ -991,7 +991,7 @@ const terminalCommands = {
       printLine(`Wake Lock: ${wakeLock ? "ACTIVE" : "INACTIVE"}`, "system");
     }
   },
-
+};
 
 
 
