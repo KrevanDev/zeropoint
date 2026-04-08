@@ -1,5 +1,6 @@
 import { THEMES, THEME_NAMES } from '../modules/themes/themes.js';
 import { BACKGROUNDS, BACKGROUND_NAMES } from './modules/backgrounds/backgroundRegistry.js';
+import { loadSettingsFromStorage, saveSettingsToStorage, loadTodosFromStorage, saveTodosToStorage, loadWeatherCacheFromStorage, saveWeatherCacheToStorage, clearWeatherCacheFromStorage } from './modules/storage.js';
 
 
 /**
@@ -259,16 +260,14 @@ function animateBg() {
 
 // --- SETTINGS & THEME ENGINE ---
 function loadSettings() {
-  const saved = localStorage.getItem('startpageSettings');
+  const saved = loadSettingsFromStorage();
   if (saved) {
-    try {
-      appSettings = { ...appSettings, ...JSON.parse(saved) };
-    } catch (e) { console.error("Failed to parse settings"); }
-  }
+    appSettings = { ...appSettings, ...saved };
+  };
 
-  const savedTodos = localStorage.getItem('startpageTodos');
+  const savedTodos = loadTodosFromStorage();
   if (savedTodos) {
-    try { todoData = JSON.parse(savedTodos); } catch (e) { todoData = []; }
+    try { todoData = savedTodos; } catch (e) { todoData = []; }
   }
 
   document.getElementById('userNameInput').value = appSettings.userName;
@@ -306,10 +305,10 @@ async function getWeatherData() {
   const handleError = (msg) => { locEl.textContent = msg; tempEl.textContent = "--"; };
 
   // 1. Check LocalStorage Cache first
-  const cached = localStorage.getItem('weatherCache');
+  const cached = loadWeatherCacheFromStorage();
   if (cached) {
     try {
-      const cacheData = JSON.parse(cached);
+      const cacheData = cached;
       const now = Date.now();
       const cacheAge = now - cacheData.timestamp;
       const oneHour = 3600000;
@@ -343,10 +342,7 @@ async function getWeatherData() {
       lastWeatherData = { tempC: weatherData.current_weather.temperature, code: weatherData.current_weather.weathercode, city };
 
       // 3. Save the fresh data to cache with a timestamp
-      localStorage.setItem('weatherCache', JSON.stringify({
-        timestamp: Date.now(),
-        data: lastWeatherData
-      }));
+      saveWeatherCacheToStorage(data);
 
       locEl.textContent = city;
       displayWeather();
@@ -430,7 +426,7 @@ function renderTodos() {
             </div>`;
     area.appendChild(div);
   });
-  localStorage.setItem('startpageTodos', JSON.stringify(todoData));
+  saveTodosToStorage(todoData);
   if (lastFocusedSubtaskId) {
     const el = document.getElementById(lastFocusedSubtaskId);
     if (el) el.focus();
@@ -537,7 +533,7 @@ function toggleSettings(open) {
 }
 
 function saveToDisk() {
-  localStorage.setItem('startpageSettings', JSON.stringify(appSettings));
+  saveSettingsToStorage(appSettings);
 }
 
 // --- COMMAND PALETTE ENGINE ---
@@ -922,7 +918,7 @@ function processTerminalCommand(input) {
       break;
     case 'weather':
       printLine("Fetching fresh weather data (bypassing cache)...", "system");
-      localStorage.removeItem('weatherCache'); // Clear cache to force fetch
+      clearWeatherCacheFromStorage(); // Clear cache to force fetch
       getWeatherData();
       break;
     case 'ls':
