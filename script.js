@@ -743,12 +743,18 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
       if (matches.length > 0) {
         hint.classList.add('visible');
         hint.innerHTML = `
-          <div class="hint-title">Themes:</div>
+          <div class="hint-title">Themes</div>
           <div class="hint-grid">
-            ${matches.map(t => `<span class="hint-item">${t}</span>`).join('')}
+            ${matches
+              .map((theme, i) =>
+                `<span class="hint-item ${i === 0 ? 'primary' : 'secondary'}">${theme}</span>`
+              )
+              .join('')}
+            ${allMatches.length > matches.length ? '<span class="hint-item secondary">…</span>' : ''}
           </div>
         `;
         currentSuggestion = `${cmd} ${matches[0]}`;
+        hint.classList.add('visible');
       } else {
         hint.classList.remove('visible');
       }
