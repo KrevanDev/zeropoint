@@ -305,6 +305,30 @@ body:has(.wl-active) #mainCard {
 }
 
 /* --- Special States --- */
+#devBadge {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 9999;
+
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+
+  color: #000;
+  background: #006d75;
+
+  box-shadow:
+    0 0 0 2px rgba(255, 59, 59, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.5);
+
+  user-select: none;
+  pointer-events: none;
+}
+
 body.zen-active .container { opacity: 0; pointer-events: none; }
 
 html.theme-iridescent body {
