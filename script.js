@@ -743,8 +743,10 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
       if (matches.length > 0) {
         hint.classList.add('visible');
         hint.innerHTML = `
-          <div>Themes:</div>
-          <div>${matches.join('</div><div>')}</div>
+          <div class="hint-title">Themes:</div>
+          <div class="hint-grid">
+            ${matches.map(t => `<span class="hint-item">${t}</span>`).join('')}
+          </div>
         `;
         currentSuggestion = `${cmd} ${matches[0]}`;
       } else {
