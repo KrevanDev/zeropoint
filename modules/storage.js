@@ -2,7 +2,7 @@ const STORAGE_KEYS = {
   SETTINGS: 'startpageSettings',
   TODOS: 'startpageTodos',
   WEATHER: 'weatherCache'
-};
+}
 
 
 //ANCHOR - Settings
@@ -16,14 +16,14 @@ export function loadSettingsFromStorage() {
     console.error('Failed to parse settings', e);
     return null;
   }
-};
+}
 
 export function saveSettingsToStorage(settings) {
   localStorage.setItem(
     STORAGE_KEYS.SETTINGS,
     JSON.stringify(settings)
   );
-};
+}
 
 
 //ANCHOR - ToDos
@@ -44,7 +44,7 @@ export function saveTodosToStorage(todos) {
     STORAGE_KEYS.TODOS,
     JSON.stringify(todos)
   );
-};
+}
 
 
 //ANCHOR - Weather
@@ -57,15 +57,15 @@ export function loadWeatherCacheFromStorage() {
   } catch (e) {
     return null;
   }
-};
+}
 
 export function saveWeatherCacheToStorage(data) {
   localStorage.setItem(
     STORAGE_KEYS.WEATHER,
     JSON.stringify(data)
   );
-};
+}
 
 export function clearWeatherCacheFromStorage() {
   localStorage.removeItem(STORAGE_KEYS.WEATHER);
-};
+}
