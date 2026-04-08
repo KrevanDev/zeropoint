@@ -484,7 +484,14 @@ function renderEditor() {
   appSettings.shortcuts.forEach((s, i) => {
     const div = document.createElement('div');
     div.className = 'shortcut-edit-item';
-    div.innerHTML = `<span>${s.label}</span><button class="del-btn" onclick="removeShortcut(${i})">&times;</button>`;
+    const label = document.createElement('span');
+    label.textContent = s.label;
+    const btn = document.createElement('button');
+    btn.className = 'del-btn';
+    btn.innerHTML = `&times`;
+    btn.addEventListener('click', () => removeShortcut(i));
+    div.appendChild(label);
+    div.appendChild(btn);
     list.appendChild(div);
   });
 }
@@ -676,6 +683,7 @@ function normalizeUrl(input) {
 document.getElementById('addShortcutBtn').onclick = () => {
   const label = document.getElementById('newLabel').value.trim();
   const url = document.getElementById('newUrl').value.trim();
+  const rawUrl = document.getElementById('newUrl').value.trim();
   if (label && rawUrl) {
     const url = normalizeUrl(rawUrl);
     appSettings.shortcuts.push({ label, url });
