@@ -1028,17 +1028,17 @@ function processTerminalCommand(input) {
       printLine("Settings & Control:", "system");
       Object.entries(terminalCommands).forEach(([domain, actions]) => {
         printLine(
-          `- ${domain}: ${Object.keys(actions).join(', ')}`,
+          `>_ ${domain}: ${Object.keys(actions).join(', ')}`,
           "system"
         );
       });
       printLine("Diagnostics & Utilities:", "system");
       printLine(
-        "- help, clear, status, config, env, net, bench",
+        ">_ help, clear, status, config, env, net, bench",
         "system"
       );
       printLine(
-        "- weather, storage, uptime, locate, ls, reset, exit",
+        ">_ weather, storage, uptime, locate, ls, reset, exit",
         "system"
       )
       break;
