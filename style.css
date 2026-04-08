@@ -162,19 +162,20 @@ body:has(.wl-active) #mainCard {
 
 .command-floating-hint {
     position: absolute;
-    bottom: 10px;
+    top: calc(100% + 8px);
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) translateY(-4px);
     font-size: 0.75rem;
     color: var(--accent-color);
     background: rgba(0, 0, 0, 0.4);
-    padding: 2px 12px;
+    padding: 6px 12px;
     border-radius: 10px;
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
-    white-space: nowrap;
+    white-space: normal;
     letter-spacing: 0.5px;
+    max-width: 90%;
 }
 
 .command-floating-hint .hint-grid {
@@ -188,7 +189,10 @@ body:has(.wl-active) #mainCard {
   white-space: nowrap;
 }
 
-.command-floating-hint.visible { opacity: 1; }
+.command-floating-hint.visible { 
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
 
 /* --- Shortcuts Grid --- */
 .links-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
