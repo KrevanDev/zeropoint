@@ -1027,9 +1027,6 @@ const devTerminalCommands = {
   }
 };
 
-
-
-
 function processTerminalCommand(input) {
   const [cmd, subcmd, ...args] = input.toLowerCase().split(' ');
 
@@ -1058,21 +1055,19 @@ function processTerminalCommand(input) {
     return;
   }
 
+  switch (cmd) {
     case 'help': {
       printLine("=== Terminal Commands ===", "system");
-    
       printLine("Settings & Control:", "system");
       Object.entries(terminalCommands).forEach(([domain, actions]) => {
         printLine(`- ${domain}: ${Object.keys(actions).join(', ')}`, "system");
       });
-    
       if (DEV_MODE) {
         printLine("Developer Commands:", "warn");
         Object.entries(devTerminalCommands).forEach(([domain, actions]) => {
           printLine(`- ${domain}: ${Object.keys(actions).join(', ')}`, "warn");
         });
       }
-    
       printLine("Diagnostics & Utilities:", "system");
       printLine(
         "- help, clear, status, config, env, net, bench",
