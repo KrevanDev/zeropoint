@@ -723,6 +723,7 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
   }
 
   const parts = val.split(' ');
+  const hasTrailingSpace = val.endsWith(' ');
   const cmd = parts[0];
   const arg = parts[1] !== undefined ? parts[1] : null;
 
@@ -741,7 +742,11 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
 
 
 if (cmd === '/theme') {
-  const allMatches = themes.filter(t => t.startsWith(arg));
+  
+  const allMatches = hasTrailingSpace
+    ? themes
+    : themes.filter(t => t.startsWith(arg));
+
   const matches = allMatches.slice(0, 6);
 
   if (matches.length > 0) {
