@@ -715,11 +715,15 @@ const termOutput = document.getElementById('terminalOutput');
 
 
 // --- TERMINAL INITIALIZATION & DISCLAIMER ---
-let terminalInitialized = false; // Reset to false on every page load
+let terminalInitialized = false;
 
 function showTerminalDisclaimer() {
   const output = document.getElementById('terminalOutput');
-  output.innerHTML = ''; // Clear any previous session logs
+  output.innerHTML = '';
+
+  if (DEV_MODE) {
+    printLine("[DEV MODE ENABLED]", "warn");
+  }
 
   const disclaimer = [
     "--------------------------------------------------",
@@ -736,7 +740,7 @@ function showTerminalDisclaimer() {
   disclaimer.forEach((line, i) => {
     setTimeout(() => {
       printLine(line, 'system');
-    }, i * 80); // Slightly faster staggered typing
+    }, i * 80);
   });
 
   terminalInitialized = true;
@@ -956,14 +960,6 @@ const terminalCommands = {
       }
       document.body.classList.remove('zen-active');
       printLine("Zen mode disabled", "system");
-    },
-  
-    toggle: () => {
-      document.body.classList.toggle('zen-active');
-      printLine(
-        `Zen mode ${document.body.classList.contains('zen-active') ? "enabled" : "disabled"}`,
-        "system"
-      );
     }
   },
 
@@ -997,12 +993,38 @@ const terminalCommands = {
       wakeLock = null;
       document.getElementById('wakeLockBtn').classList.remove('wl-active');
       printLine("Wake Lock disabled", "system");
-    },
-  
-    status: () => {
-      printLine(`Wake Lock: ${wakeLock ? "ACTIVE" : "INACTIVE"}`, "system");
     }
   },
+};
+
+// --- DEV MODE FLAG ---
+const DEV_MODE = new URLSearchParams(window.location.search).has('dev');
+
+
+const devTerminalCommands = {
+  dev: {
+    status: () => {
+      printLine("Dev mode is ENABLED", "warn");
+    },
+
+    resetbg: () => {
+      initCanvas();
+      printLine("Background system reset", "system");
+    },
+
+    dumpstate: () => {
+      printLine("=== App State Dump ===", "system");
+      printLine(JSON.stringify(appSettings, null, 2));
+    },
+
+    chaos: () => {
+      particles.forEach(p => {
+        p.speedX *= 3;
+        p.speedY *= 3;
+      });
+      printLine("CHAOS MODE ACTIVATED (temporary)", "warn");
+    }
+  }
 };
 
 
@@ -1010,6 +1032,20 @@ const terminalCommands = {
 
 function processTerminalCommand(input) {
   const [cmd, subcmd, ...args] = input.toLowerCase().split(' ');
+
+  if (DEV_MODE && devTerminalCommands[cmd]) {
+    const domain = devTerminalCommands[cmd];
+
+    if (domain[subcmd]) {
+      domain[subcmd](...args);
+    } else {
+      printLine(
+        `Dev usage: ${cmd} ${Object.keys(domain).join(' | ')}`,
+        "warn"
+      );
+    }
+    return;
+  }
 
   if (terminalCommands[cmd]) {
     const domain = terminalCommands[cmd];
@@ -1022,25 +1058,30 @@ function processTerminalCommand(input) {
     return;
   }
 
-  switch (cmd) {
     case 'help': {
       printLine("=== Terminal Commands ===", "system");
+    
       printLine("Settings & Control:", "system");
       Object.entries(terminalCommands).forEach(([domain, actions]) => {
-        printLine(
-          `> ${domain}: ${Object.keys(actions).join(', ')}`,
-          "system"
-        );
+        printLine(`- ${domain}: ${Object.keys(actions).join(', ')}`, "system");
       });
+    
+      if (DEV_MODE) {
+        printLine("Developer Commands:", "warn");
+        Object.entries(devTerminalCommands).forEach(([domain, actions]) => {
+          printLine(`- ${domain}: ${Object.keys(actions).join(', ')}`, "warn");
+        });
+      }
+    
       printLine("Diagnostics & Utilities:", "system");
       printLine(
-        "> help, clear, status, config, env, net, bench",
+        "- help, clear, status, config, env, net, bench",
         "system"
       );
       printLine(
-        "> weather, storage, uptime, locate, ls, reset, exit",
+        "- weather, storage, uptime, locate, ls, reset, exit",
         "system"
-      )
+      );
       break;
     }
     case 'status':
