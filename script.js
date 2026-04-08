@@ -391,6 +391,8 @@ function displayWeather() {
 
 function toggleWeatherUnit() {
   appSettings.weatherUnit = appSettings.weatherUnit === 'C' ? 'F' : 'C';
+  document.getElementById('weatherTemp')
+    .addEventListener('click', toggleWeatherUnit);
   saveToDisk();
   displayWeather();
 }
