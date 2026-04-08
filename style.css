@@ -162,7 +162,7 @@ body:has(.wl-active) #mainCard {
 
 .command-floating-hint {
     position: absolute;
-    top: calc(100% + 8px);
+    top: 50%;
     left: 50%;
     transform: translateX(-50%) translateY(-4px);
     font-size: 0.75rem;
