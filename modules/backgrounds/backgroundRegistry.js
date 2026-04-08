@@ -28,4 +28,4 @@ export const BACKGROUNDS = {
   }
 };
 
-export const BACKGROUND_NAMES = Object.keys(BACKGROUNDS);
+export const BACKGROUND_NAMES = Object.keys(BACKGROUNDS).sort();
