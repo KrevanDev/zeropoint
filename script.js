@@ -705,7 +705,6 @@ document.getElementById('searchForm').onsubmit = (e) => {
     window.open(`https://duckduckgo.com/?q=${encodeURIComponent(query)}`, '_blank');
   }
   document.getElementById('searchInput').value = '';
-  document.getElementById('commandHint').classList.remove('visible');
 };
 
 // --- SYSTEM TERMINAL ENGINE ---
