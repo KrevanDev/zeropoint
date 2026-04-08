@@ -93,4 +93,4 @@ export const THEMES = {
 };
 
 
-export const THEME_NAMES = Object.keys(THEMES);
+export const THEME_NAMES = Object.keys(THEMES).sort();
