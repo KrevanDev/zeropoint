@@ -1025,8 +1025,6 @@ function processTerminalCommand(input) {
   switch (cmd) {
     case 'help': {
       printLine("=== Terminal Commands ===", "system");
-    
-      // Registry-based commands (dynamic)
       printLine("Settings & Control:", "system");
       Object.entries(terminalCommands).forEach(([domain, actions]) => {
         printLine(
@@ -1034,8 +1032,6 @@ function processTerminalCommand(input) {
           "system"
         );
       });
-    
-      // Legacy / diagnostic commands
       printLine("Diagnostics & Utilities:", "system");
       printLine(
         "- help, clear, status, config, env, net, bench",
@@ -1044,7 +1040,7 @@ function processTerminalCommand(input) {
       printLine(
         "- weather, storage, uptime, locate, ls, reset, exit",
         "system"
-      );
+      )
       break;
     case 'status':
       const wc = loadWeatherCacheFromStorage();
