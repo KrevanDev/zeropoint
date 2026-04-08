@@ -315,7 +315,7 @@ async function getWeatherData() {
 
       if (cacheAge < oneHour) {
         console.log(`[SYS] Using cached weather data. (${Math.round(cacheAge / 3600000)}m old)`);
-        lastWeatherData = cacheData.data;
+        lastWeatherData = cacheData;
         locEl.textContent = lastWeatherData.city;
         displayWeather();
         return; // Exit function early, no API calls needed
@@ -339,10 +339,17 @@ async function getWeatherData() {
       const geoData = await geoRes.json();
 
       const city = geoData.address.city || geoData.address.town || geoData.address.village || "Nearby";
-      lastWeatherData = { tempC: weatherData.current_weather.temperature, code: weatherData.current_weather.weathercode, city };
+      lastWeatherData = {
+        tempC: weatherData.current_weather.temperature,
+        code: weatherData.current_weather.weathercode,
+        city,
+        timestamp: Date.now(),
+      };
 
       // 3. Save the fresh data to cache with a timestamp
-      saveWeatherCacheToStorage(data);
+      saveWeatherCacheToStorage(lastWeatherData);
+      locEl.textContent = city;
+      displayWeather()
 
       locEl.textContent = city;
       displayWeather();
@@ -351,7 +358,10 @@ async function getWeatherData() {
 }
 
 function displayWeather() {
-  if (!lastWeatherData) return;
+  if (!lastWeatherData) {
+    console.warn("displayWeather called without data");
+    return;
+  }
   const tempEl = document.getElementById('weatherTemp');
   const { tempC, code } = lastWeatherData;
   let displayTemp = appSettings.weatherUnit === 'F' ? Math.round((tempC * 9 / 5) + 32) : Math.round(tempC);
@@ -896,9 +906,10 @@ function processTerminalCommand(input) {
       termOutput.innerHTML = '';
       break;
     case 'status':
+      const wc = loadWeatherCacheFromStorage();
       printLine(`Theme: ${appSettings.theme}`, "system");
       printLine(`Background: ${appSettings.bgEffect}`, "system");
-      printLine(`Weather Cache: ${weatherCache ? 'Active' : 'Empty'}`, "system");
+      printLine(`Weather Cache: ${wc ? 'Active' : 'Empty'}`, "system");
       break;
     case 'config':
       printLine(JSON.stringify(appSettings, null, 2));
