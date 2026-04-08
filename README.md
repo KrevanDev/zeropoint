@@ -20,25 +20,6 @@ Built with a focus on aesthetics, minimalism, and the idea of a functional syste
 * **Dynamic Background Engine:** 9+ high-performance Canvas effects including `Matrix`, `Crystals`, `Stellar`, and `Sakura Petals`.
 
 
-## 🚀 Roadmap & Future Updates
-
-ZeroPoint is an evolving project. Planned features for upcoming releases include:
-Track the progress of ZeroPoint's evolution. Check the [Issues](https://github.com/yourusername/zeropoint/issues) tab to contribute to these modules.
-
-- [ ] **Bangs Support**
-  * **Description:** Universal navigation via the search bar. Typing `!g` redirects to Google, `!a` to Amazon, or `!w` to Wikipedia, turning the search bar into a high-speed command hub.
-- [ ] **Export/Import Configs**
-  * **Description:** Current settings rely on `localStorage`. This feature will allow users to download a `config.json` file containing all shortcuts, tasks, and theme preferences to sync across different browsers or machines.
-- [ ] **Markdown Notepad**
-  * **Description:** A dedicated view providing a distraction-free environment for persistent note-taking. Supports live Markdown rendering for quick formatting of thoughts, snippets, or documentation.
-- [ ] **Mobile Optimization**
-  * **Description:** Transformation into a Progressive Web App (PWA). Includes responsive CSS media queries for vertical screens and optimized touch-event listeners for mobile interaction.
-- [ ] **Advanced System Expansion**
-  * **More Themes!**
-  * **More Backgrounds!!**
-  * **More Terminal!!!**
-
-
 ## ⌨️ Command Palette Reference
 
 Type these directly into the main search bar:
@@ -49,6 +30,24 @@ Type these directly into the main search bar:
 | `/theme` | Change the UI color profile | `/theme vaporwave` |
 | `/timer` | Set a focus timer in minutes | `/timer 25` |
 | `/zen` | Hide all UI elements for pure focus | `/zen` |
+
+
+## 🚀 Roadmap & Future Updates
+
+ZeroPoint is an evolving project. Planned roadmap and features for upcoming releases include:
+
+- [ ] **Refactoring**
+  * Need to refactor everything into easier to navigate pieces/modules.
+- [ ] **Bangs Support**
+  * Universal navigation via the search bar. Typing `!g` redirects to Google, `!a` to Amazon, or `!w` to Wikipedia, turning the search bar into a high-speed command hub.
+- [ ] **Export/Import Configs**
+  * Current settings rely on `localStorage`. This feature will allow users to download a `config.json` file containing all shortcuts, tasks, and theme preferences to sync across different browsers or machines. Also toying with the idea of a jsonified string like in [StartTreeV2](https://github.com/AlexW00/StartTreeV2).
+- [ ] **Notepad**
+  * A dedicated view providing a distraction-free environment for persistent note-taking. Possibly looking into Markdown support at some point.
+- [ ] **Mobile Optimization**
+  * Transformation into a Progressive Web App (PWA). Includes responsive CSS media queries for vertical screens and optimized touch-event listeners for mobile interaction.
+- [ ] **Advanced System Expansion**
+  * More Themes! More Backgrounds!! More Terminal!!!
 
 
 ## 🛠️ Installation & Setup
