@@ -1,4 +1,5 @@
-import { THEMES } from '../modules/themes/themes.js';
+import { THEMES, THEME_NAMES } from '../modules/themes/themes.js';
+import { BACKGROUNDS, BACKGROUND_NAMES } from './modules/backgrounds/backgroundRegistry.js';
 
 
 /**
@@ -204,6 +205,8 @@ function initCanvas() {
   matrixDrops = Array(columns).fill(1);
 }
 
+
+const currentBgMeta = BACKGROUNDS[appSettings.bgEffect];
 function animateBg() {
   const effect = appSettings.bgEffect;
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ffffff';
@@ -538,8 +541,8 @@ function saveToDisk() {
 }
 
 // --- COMMAND PALETTE ENGINE ---
-const themes = ['toxic', 'blaze', 'cyberpunk', 'lofi', 'vaporwave', 'monochrome', 'iridescent', 'sakura', 'forest', 'nebula', 'glacier', 'midnight', 'amber'];
-const backgrounds = ['classic', 'magnetic', 'matrix', 'geometric', 'crystals', 'bubbles', 'stellar', 'petals', 'leaves'];
+const themes = THEME_NAMES;
+const backgrounds = BACKGROUND_NAMES;
 const commands = ['/theme', '/bg', '/timer', '/zen'];
 
 function handleCommand(query) {

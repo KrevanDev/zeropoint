@@ -91,3 +91,6 @@ export const THEMES = {
     accent: '#ffd700'
   }
 };
+
+
+export const THEME_NAMES = Object.keys(THEMES);
