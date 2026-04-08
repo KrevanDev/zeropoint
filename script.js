@@ -666,10 +666,18 @@ document.getElementById('saveSettingsBtn').onclick = () => {
   toggleSettings(false);
 };
 
+function normalizeUrl(input) {
+  if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(input)) {
+    return 'https://' + input;
+  }
+  return input;
+}
+
 document.getElementById('addShortcutBtn').onclick = () => {
   const label = document.getElementById('newLabel').value.trim();
   const url = document.getElementById('newUrl').value.trim();
-  if (label && url) {
+  if (label && rawUrl) {
+    const url = normalizeUrl(rawUrl);
     appSettings.shortcuts.push({ label, url });
     document.getElementById('newLabel').value = '';
     document.getElementById('newUrl').value = '';
