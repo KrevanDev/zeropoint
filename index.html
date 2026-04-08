@@ -6,6 +6,21 @@
     <title>ZeroPoint // Start</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+    <script>
+      const path = window.location.pathname;
+      const base =
+        path.endsWith('/')
+          ? path
+          : path.replace(/\/[^/]*$/, '/');
+    
+      window.APP_BASE = base; // optional, for debugging
+    
+      const s = document.createElement('script');
+      s.type = 'module';
+      s.src = base + 'script.js';
+      document.head.appendChild(s);
+    </script>
 </head>
 <body>
 
