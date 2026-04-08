@@ -712,6 +712,8 @@ const termDrawer = document.getElementById('terminalDrawer');
 const termInput = document.getElementById('terminalInput');
 const termOutput = document.getElementById('terminalOutput');
 
+
+
 // --- TERMINAL INITIALIZATION & DISCLAIMER ---
 let terminalInitialized = false; // Reset to false on every page load
 
@@ -746,6 +748,16 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     const termDrawer = document.getElementById('terminalDrawer');
     const termInput = document.getElementById('terminalInput');
+
+      termInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          // Only close if input is empty
+          if (termInput.value.trim() === '') {
+            termDrawer.classList.remove('open');
+            e.preventDefault();
+          }
+        }
+      });
 
     termDrawer.classList.toggle('open');
 
@@ -1011,11 +1023,28 @@ function processTerminalCommand(input) {
   }
 
   switch (cmd) {
-    case 'help':
-      printLine("Available commands: ")
-      printLine("bench, clear, config, env, exit", "system")
-      printLine("locate, ls, reset, setname {name}, status", "system")
-      printLine("storage, uptime, wakelock, weather", "system")
+    case 'help': {
+      printLine("=== Terminal Commands ===", "system");
+    
+      // Registry-based commands (dynamic)
+      printLine("Settings & Control:", "system");
+      Object.entries(terminalCommands).forEach(([domain, actions]) => {
+        printLine(
+          `- ${domain}: ${Object.keys(actions).join(', ')}`,
+          "system"
+        );
+      });
+    
+      // Legacy / diagnostic commands
+      printLine("Diagnostics & Utilities:", "system");
+      printLine(
+        "- help, clear, status, config, env, net, bench",
+        "system"
+      );
+      printLine(
+        "- weather, storage, uptime, locate, ls, reset, exit",
+        "system"
+      );
       break;
     case 'status':
       const wc = loadWeatherCacheFromStorage();
