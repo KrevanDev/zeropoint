@@ -29,6 +29,9 @@ let lastWeatherData = null;
 let lastFocusedSubtaskId = null;
 let wakeLock = null;
 let lastSetTimerMinutes = 25;
+let DEV_SHOW_STATS = false;
+let devLastFrameTime = performance.now();
+let devFPS = 0;
 
 // --- BACKGROUND CANVAS SYSTEM ---
 const canvas = document.getElementById('bgCanvas');
@@ -211,6 +214,9 @@ const currentBgMeta = BACKGROUNDS[appSettings.bgEffect];
 function animateBg() {
   const effect = appSettings.bgEffect;
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ffffff';
+  const now = performance.now();
+  devFPS = Math.round(1000 / (now - devLastFrameTime));
+  devLastFrameTime = now;
 
   if (effect === 'matrix') {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
@@ -256,6 +262,20 @@ function animateBg() {
     }
   }
   requestAnimationFrame(animateBg);
+  
+  if (DEV_MODE && DEV_SHOW_STATS) {
+    ctx.save();
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = '#0f0';
+    ctx.font = '12px monospace';
+    ctx.fillText(
+      `FPS: ${devFPS} | Particles: ${particles.length}`,
+      12,
+      canvas.height - 12
+    );
+    ctx.restore();
+  }
+
 }
 
 // --- SETTINGS & THEME ENGINE ---
@@ -1008,6 +1028,33 @@ if (DEV_MODE) {
 
 const devTerminalCommands = {
   dev: {
+    particles: {
+      count: () => {
+        printLine(`Particles: ${particles.length}`, "system");
+      }
+    },
+
+    fps: () => {
+      printLine(`FPS (last frame): ${devFPS}`, "system");
+    },
+
+    reset: {
+      timer: () => {
+        resetTimer();
+        printLine("Timer reset (dev)", "system");
+      }
+    },
+
+    toggle: {
+      stats: () => {
+        DEV_SHOW_STATS = !DEV_SHOW_STATS;
+        printLine(
+          `Dev stats ${DEV_SHOW_STATS ? "ENABLED" : "DISABLED"}`,
+          "warn"
+        );
+      }
+    },
+    
     status: () => {
       printLine("Dev mode is ENABLED", "warn");
     },
@@ -1036,17 +1083,22 @@ function processTerminalCommand(input) {
   const [cmd, subcmd, ...args] = input.toLowerCase().split(' ');
 
   if (DEV_MODE && devTerminalCommands[cmd]) {
-    const domain = devTerminalCommands[cmd];
-
-    if (domain[subcmd]) {
-      domain[subcmd](...args);
-    } else {
-      printLine(
-        `Dev usage: ${cmd} ${Object.keys(domain).join(' | ')}`,
-        "warn"
-      );
+    if (!runCommand(devTerminalCommands[cmd], [subcmd, ...args])) {
+      printLine("Invalid dev command", "error");
     }
     return;
+  }
+
+  function runCommand(domain, parts) {
+    if (typeof domain === 'function') {
+      domain();
+      return true;
+    }
+    const [next, ...rest] = parts;
+    if (domain[next]) {
+      return runCommand(domain[next], rest);
+    }
+    return false;
   }
 
   if (terminalCommands[cmd]) {
