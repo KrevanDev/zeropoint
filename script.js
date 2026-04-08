@@ -1,4 +1,4 @@
-import { THEMES, THEME_NAMES } from '../modules/themes/themes.js';
+import { THEMES, THEME_NAMES } from './modules/themes/themes.js';
 import { BACKGROUNDS, BACKGROUND_NAMES } from './modules/backgrounds/backgroundRegistry.js';
 import { loadSettingsFromStorage, saveSettingsToStorage, loadTodosFromStorage, saveTodosToStorage, loadWeatherCacheFromStorage, saveWeatherCacheToStorage, clearWeatherCacheFromStorage } from './modules/storage.js';
 
