@@ -176,6 +176,18 @@ body:has(.wl-active) #mainCard {
     white-space: nowrap;
     letter-spacing: 0.5px;
 }
+
+.command-floating-hint .hint-grid {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  gap: 6px 10px;
+  justify-content: center;
+}
+
+.command-floating-hint .hint-item {
+  white-space: nowrap;
+}
+
 .command-floating-hint.visible { opacity: 1; }
 
 /* --- Shortcuts Grid --- */
