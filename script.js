@@ -136,18 +136,18 @@ class Particle {
     // --- INTERACTIVE PHYSICS TIER ---
     if (effect === 'magnetic' && distance < mouse.radius * 2) {
       let force = (mouse.radius * 2 - distance) / (mouse.radius * 2);
-      this.x += (dx / distance) * force * 2;
-      this.y += (dy / distance) * force * 2;
+      this.x += (dx / distance) * force * 0.5;
+      this.y += (dy / distance) * force * 0.5;
       this.size = this.baseSize + (force * 3);
     } else if (effect === 'classic' && distance < mouse.radius) {
       let force = (mouse.radius - distance) / mouse.radius;
-      this.x += (dx / distance) * force * this.density * 0.4;
-      this.y += (dy / distance) * force * this.density * 0.4;
+      this.x += (dx / distance) * force * this.density * 0.03;
+      this.y += (dy / distance) * force * this.density * 0.03;
     } else if (effect === 'stellar' && distance < mouse.radius) {
       // Subtle "gravity" pull for stars
       let force = (mouse.radius - distance) / mouse.radius;
-      this.x += (dx / distance) * force * 0.5;
-      this.y += (dy / distance) * force * 0.5;
+      this.x += (dx / distance) * force * 0.65;
+      this.y += (dy / distance) * force * 0.65;
     } else if (effect === 'leaves' && distance < mouse.radius) {
       // Repel effect: Leaves "flutter" away from the cursor
       let force = (mouse.radius - distance) / mouse.radius;
@@ -176,7 +176,7 @@ class Particle {
       if (this.y > canvas.height + 20) this.y = -20;
     } else if (effect === 'leaves') {
       // Drifting upward like embers/light leaves
-      this.y -= 0.3;
+      this.y -= 0.1;
       this.x += Math.cos(this.y / 50) * 0.3;
       this.rotation += 0.005 * this.spin;
       if (this.y < -20) this.y = canvas.height + 20;
