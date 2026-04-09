@@ -1,13 +1,10 @@
-# ZeroPoint Changelog
-
 ## ✨ New
-- Work mode (`work`) added to terminal
-- Dev stats overlay added (`dev toggle stats`)
+- THIS CHANGELOG! Easier communication with changes.
 
 ## 🛠 Improvements
-- Iridescent theme stability improved
-- Terminal help auto-generated
+- New terminal commands available with the `help` command!
 
 ## 🐛 Fixes
-- Weather unit toggle persistence
-- Background drift issue in long sessions
+- Task List is working again!
+- Weather Widget is working again!
+

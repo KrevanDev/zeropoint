@@ -1,6 +1,7 @@
 import { THEMES, THEME_NAMES } from './modules/themes/themes.js';
 import { BACKGROUNDS, BACKGROUND_NAMES } from './modules/backgrounds/backgroundRegistry.js';
 import { loadSettingsFromStorage, saveSettingsToStorage, loadTodosFromStorage, saveTodosToStorage, loadWeatherCacheFromStorage, saveWeatherCacheToStorage, clearWeatherCacheFromStorage } from './modules/storage.js';
+import { maybeShowChangelog } from './modules/changelogModal.js';
 
 
 /**
@@ -389,13 +390,15 @@ function displayWeather() {
   tempEl.textContent = `${icon} ${displayTemp}°${appSettings.weatherUnit}`;
 }
 
+// 1. Define the function (Cleaned up)
 function toggleWeatherUnit() {
   appSettings.weatherUnit = appSettings.weatherUnit === 'C' ? 'F' : 'C';
-  document.getElementById('weatherTemp')
-    .addEventListener('click', toggleWeatherUnit);
-  saveToDisk();
+  saveSettingsToStorage(appSettings); // Use your existing storage helper
   displayWeather();
 }
+
+// 2. Attach the listener (Put this at the bottom of script.js or near other listeners)
+document.getElementById('weatherWidget').addEventListener('click', toggleWeatherUnit);
 
 // --- CLOCK & FOCUS TIMER ---
 function updateClock() {
@@ -437,45 +440,88 @@ function resetTimer() {
   updateClock();
 }
 
-// --- TASK SYSTEM ---
+// Ensure these functions exist in your script.js
+function toggleTodo(i) {
+  todoData[i].done = !todoData[i].done;
+  renderTodos();
+}
+
+function deleteTodo(i) {
+  todoData.splice(i, 1);
+  lastFocusedSubtaskId = null; // Clear the "memory"
+  renderTodos();
+}
+
+function toggleSub(i, si) {
+  todoData[i].subtasks[si].done = !todoData[i].subtasks[si].done;
+  renderTodos();
+}
+
+// MAKE SURE THIS NAME MATCHES THE ONE IN YOUR LISTENER
+function delSub(i, si) {
+  todoData[i].subtasks.splice(si, 1);
+  lastFocusedSubtaskId = null; // Clear the "memory"
+  renderTodos();
+}
+
+// 1. Updated render function (Notice the onkeydown is GONE)
 function renderTodos() {
-  const area = document.getElementById('todoDisplayArea'); area.innerHTML = '';
+  const area = document.getElementById('todoDisplayArea');
+  area.innerHTML = '';
+
   todoData.forEach((todo, idx) => {
-    const div = document.createElement('div'); div.className = 'todo-item-box';
+    const div = document.createElement('div');
+    div.className = 'todo-item-box';
     div.innerHTML = `
             <div class="todo-main-line">
-                <span class="todo-text-display ${todo.done ? 'done' : ''}" onclick="toggleTodo(${idx})">${todo.text}</span>
-                <button class="del-btn" onclick="deleteTodo(${idx})">&times;</button>
+                <span class="todo-text-display ${todo.done ? 'done' : ''}" data-idx="${idx}" data-action="toggle">${todo.text}</span>
+                <button class="del-btn" data-idx="${idx}" data-action="delete">&times;</button>
             </div>
             <div class="subtask-area">
                 ${todo.subtasks.map((sub, sIdx) => `
                     <div class="sub-item">
-                        <input type="checkbox" ${sub.done ? 'checked' : ''} onchange="toggleSub(${idx},${sIdx})">
+                        <input type="checkbox" ${sub.done ? 'checked' : ''} data-idx="${idx}" data-sidx="${sIdx}" data-action="toggleSub">
                         <span class="${sub.done ? 'sub-done' : ''}">${sub.text}</span>
-                        <button class="del-btn" style="font-size:0.8rem" onclick="delSub(${idx},${sIdx})">&times;</button>
+                        <button class="del-btn" data-idx="${idx}" data-sidx="${sIdx}" data-action="delSub">&times;</button>
                     </div>`).join('')}
-                <input type="text" class="sub-input-box" id="subInput-${idx}" placeholder="Add subtask..." onkeydown="handleSubKey(event, ${idx})">
+                <input type="text" class="sub-input-box" id="subInput-${idx}" data-idx="${idx}" placeholder="Add subtask...">
             </div>`;
     area.appendChild(div);
   });
+
   saveTodosToStorage(todoData);
   if (lastFocusedSubtaskId) {
     const el = document.getElementById(lastFocusedSubtaskId);
-    if (el) el.focus();
+    if (el) {
+      el.focus();
+      // Optional: clear it after focusing so it doesn't persist forever
+      lastFocusedSubtaskId = null;
+    }
   }
 }
 
-function toggleTodo(i) { todoData[i].done = !todoData[i].done; renderTodos(); }
-function deleteTodo(i) { todoData.splice(i, 1); renderTodos(); }
-function toggleSub(i, si) { todoData[i].subtasks[si].done = !todoData[i].subtasks[si].done; renderTodos(); }
-function delSub(i, si) { todoData[i].subtasks.splice(si, 1); renderTodos(); }
-function handleSubKey(e, i) {
-  if (e.key === 'Enter' && e.target.value.trim()) {
-    todoData[i].subtasks.push({ text: e.target.value.trim(), done: false });
-    lastFocusedSubtaskId = `subInput-${i}`;
-    renderTodos();
+// 2. A single listener to handle ALL clicks and keys in the Todo area
+document.getElementById('todoDisplayArea').addEventListener('click', (e) => {
+  const { idx, sidx, action } = e.target.dataset;
+  if (!action) return;
+
+  if (action === 'toggle') toggleTodo(idx);
+  if (action === 'delete') deleteTodo(idx);
+  if (action === 'toggleSub') toggleSub(idx, sidx);
+  if (action === 'delSub') delSub(idx, sidx);
+});
+
+document.getElementById('todoDisplayArea').addEventListener('keydown', (e) => {
+  if (e.target.classList.contains('sub-input-box') && e.key === 'Enter') {
+    const idx = e.target.dataset.idx;
+    const val = e.target.value.trim();
+    if (val) {
+      todoData[idx].subtasks.push({ text: val, done: false });
+      lastFocusedSubtaskId = `subInput-${idx}`;
+      renderTodos();
+    }
   }
-}
+});
 
 // --- SHORTCUTS SYSTEM ---
 let dragSrcIndex = null;
@@ -865,8 +911,8 @@ function printLine(text, type = '') {
   termOutput.scrollTop = termOutput.scrollHeight;
 }
 
-//ANCHOR - Terminal
 
+//ANCHOR - Terminal Section
 // --- COMMAND REGISTRY ---
 const terminalCommands = {
   theme: {
@@ -1337,8 +1383,9 @@ document.getElementById('wakeLockBtn').onclick = async () => {
 };
 
 // Initialize App
-setInterval(() => { if (!isTimerMode) updateClock(); }, 1000);
+loadSettings();
+updateClock();
 initCanvas();
 animateBg();
-updateClock();
-loadSettings();
+maybeShowChangelog();
+setInterval(() => { if (!isTimerMode) updateClock(); }, 1000);

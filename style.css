@@ -189,7 +189,22 @@ body:has(.wl-active) #mainCard {
 .todo-input-row { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; }
 .todo-input-row input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; outline: none; }
 .btn-todo-add { background: #fff; border: none; padding: 0 20px; border-radius: 8px; font-weight: 600; cursor: pointer; color: #000; }
-.todo-list-scroll { max-height: 400px; overflow-y: auto; text-align: left; }
+/* Update this class in your style.css */
+.todo-list-scroll {
+    height: auto;
+    max-height: 45vh; 
+    overflow-y: auto;
+    text-align: left;
+    
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.todo-list-scroll::-webkit-scrollbar {
+    display: none;
+}
 .todo-item-box { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
 .todo-main-line { display: flex; align-items: center; justify-content: space-between; }
 .todo-text-display { cursor: pointer; flex: 1; }
@@ -199,6 +214,73 @@ body:has(.wl-active) #mainCard {
 .sub-done { text-decoration: line-through; opacity: 0.4; }
 .sub-input-box { width: 100%; font-size: 0.8rem; padding: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px; margin-top: 5px; outline: none; }
 .del-btn { color: #ff4d4d; cursor: pointer; background: none; border: none; font-size: 1.1rem; padding-left: 10px; }
+/* Container */
+#todoDisplayArea {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+    padding-right: 5px; /* Tiny buffer since the scrollbar is gone */
+}
+
+/* Main Task Box */
+.todo-item-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 3px solid var(--accent-color);
+    padding: 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.todo-main-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.todo-text-display {
+    font-size: 1.1rem;
+    cursor: pointer;
+    font-family: 'Consolas', monospace;
+}
+
+.todo-text-display.done {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+
+/* Subtasks */
+.subtask-area {
+    margin-left: 20px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sub-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    color: #bbb;
+}
+
+/* The Input Box */
+.sub-input-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 5px 10px;
+    width: 100%;
+    margin-top: 10px;
+    outline: none;
+}
+
+.sub-input-box:focus {
+    border-color: var(--accent-color);
+}
 
 /* --- Settings Modal --- */
 .settings-modal { 
@@ -249,6 +331,126 @@ body:has(.wl-active) #mainCard {
     transition: 0.3s; z-index: 1999; 
 }
 .modal-backdrop.active { opacity: 1; visibility: visible; }
+
+/* --- Changelog Modal Styles --- */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px; /* Prevents card from hitting screen edges on small displays */
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-card {
+    background: rgba(10, 10, 10, 0.98); /* Slightly more opaque for readability */
+    border: 1px solid var(--accent-color);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), 0 0 20px var(--glow-color);
+    width: 100%;
+    max-width: 650px; /* Widened slightly to accommodate more text without vertical bloat */
+    padding: 40px;
+    border-radius: 15px;
+    position: relative;
+    backdrop-filter: blur(15px);
+    animation: modalSlideUp 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.modal-card h2 {
+    color: var(--accent-color);
+    font-family: 'Consolas', monospace;
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* NO SCROLLBAR VERSION */
+#changelogContent {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #eee;
+    margin-bottom: 30px;
+}
+
+#changelogContent h1, 
+#changelogContent h2, 
+#changelogContent h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: var(--accent-color);
+}
+
+#changelogContent p {
+    margin-bottom: 15px; /* Adds space between paragraphs */
+}
+
+#changelogContent ul {
+    margin-left: 20px;    /* Indent bullet points */
+    margin-bottom: 20px;  /* Space after the list */
+}
+
+#changelogContent li {
+    margin-bottom: 8px;   /* Space between individual bullet points */
+    list-style-type: square; /* Makes bullets look more "tech" */
+}
+
+#changelogContent code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    color: var(--accent-color);
+}
+
+/* RIGHT ALIGNED CHECKBOX */
+.checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Pushes content to the right */
+    gap: 12px;
+    font-size: 0.85rem;
+    color: #aaa;
+    cursor: pointer;
+    margin-bottom: 25px;
+    user-select: none;
+}
+
+/* Make sure the actual checkbox input stays to the right of the text */
+.checkbox input {
+    order: 2; /* Moves checkbox after the text label */
+    cursor: pointer;
+    accent-color: var(--accent-color); /* Themed checkbox color */
+}
+
+#closeChangelogBtn {
+    background: transparent;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: 'Consolas', monospace;
+    transition: all 0.3s;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#closeChangelogBtn:hover {
+    background: var(--accent-color);
+    color: #000;
+    box-shadow: 0 0 20px var(--accent-color);
+}
 
 /* --- System Terminal --- */
 .terminal-drawer {

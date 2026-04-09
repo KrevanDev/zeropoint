@@ -31,10 +31,11 @@ function showChangelogModal(html, hash) {
   content.innerHTML = html;
   modal.classList.add('active');
 
-  document.getElementById('closeChangelogBtn').onclick = () => {
+  // Add the ?. before .onclick
+  document.getElementById('closeChangelogBtn')?.addEventListener('click', () => {
     if (checkbox.checked) {
       localStorage.setItem(STORAGE_KEY, hash);
     }
     modal.classList.remove('active');
-  };
+  });
 }

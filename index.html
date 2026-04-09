@@ -31,7 +31,7 @@
     <div class="container">
         <div class="glass-card" id="mainCard">
             
-            <div class="weather-widget" id="weatherWidget" onclick="toggleWeatherUnit()">
+            <div class="weather-widget" id="weatherWidget">
                 <span id="weatherLoc" class="loc-text">Locating...</span>
                 <span id="weatherTemp">--</span>
             </div>
@@ -92,6 +92,21 @@
 
         </div>
     </div>
+
+<div id="changelogModal" class="modal">
+    <div class="modal-card">
+        <center><h2>⭐ What’s New ⭐</h2></center>
+
+        <div id="changelogContent"></div>
+
+        <label class="checkbox">
+            <input type="checkbox" id="changelogAcknowledge" />
+            Don’t show this again until it changes
+        </label>
+        
+        <button id="closeChangelogBtn" class="btn-timer" style="margin-top: 20px; width: 100%;">Close</button>
+    </div>
+</div>
 
     <div class="settings-modal" id="settingsModal">
         <div class="settings-header">
