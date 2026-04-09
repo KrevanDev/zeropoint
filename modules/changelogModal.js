@@ -1,6 +1,6 @@
 import { marked } from 'https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js';
 
-const CHANGELOG_URL = '../changelog.md';
+const CHANGELOG_URL = './changelog.md';
 const STORAGE_KEY = 'lastSeenChangelogHash';
 
 async function hashText(text) {
