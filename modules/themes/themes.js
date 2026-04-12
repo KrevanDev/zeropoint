@@ -41,6 +41,13 @@ export const THEMES = {
     glow: 'rgba(255, 113, 206, 0.4)',
     accent: '#ff71ce'
   },
+  'neonrose': {
+    bg: '#fff0f8',
+    card: 'rgba(209, 63, 164, 0.08)',
+    timer: 'linear-gradient(to right, #f660b1, #d33ae1)',
+    glow: 'rgba(252, 42, 170, 0.25)',
+    accent: '#d33ae1'
+  },
   'ultraviolet': {
     bg: '#001513',
     card: 'rgba(100, 53, 255, 0.03)',
