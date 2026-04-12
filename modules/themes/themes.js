@@ -41,12 +41,12 @@ export const THEMES = {
     glow: 'rgba(255, 113, 206, 0.4)',
     accent: '#ff71ce'
   },
-  'neonrose': {
-    bg: '#fff0f8',
-    card: 'rgba(209, 63, 164, 0.08)',
-    timer: 'linear-gradient(to right, #f660b1, #d33ae1)',
-    glow: 'rgba(252, 42, 170, 0.25)',
-    accent: '#d33ae1'
+  'prism': {
+    bg: '#f5eefa',
+    card: 'rgba(194, 84, 193, 0.07)',
+    timer: 'linear-gradient(to right, #00c27e, #e87af6)',
+    glow: 'rgba(0, 145, 255, 0.2)',
+    accent: '#f041d1'
   },
   'ultraviolet': {
     bg: '#001513',
