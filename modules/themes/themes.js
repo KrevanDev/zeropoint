@@ -33,27 +33,6 @@ export const THEMES = {
     timer: 'linear-gradient(to right, #e76f51, #f4a261)',
     glow: 'rgba(244, 162, 97, 0.3)',
     accent: '#f4a261'
-  },
-  'vaporwave': {
-    bg: '#0b0014',
-    card: 'rgba(255, 113, 206, 0.02)',
-    timer: 'linear-gradient(to right, #01cdfe, #05ffa1)',
-    glow: 'rgba(255, 113, 206, 0.4)',
-    accent: '#ff71ce'
-  },
-  'prism': {
-    bg: '#f5eefa',
-    card: 'rgba(194, 84, 193, 0.15)',
-    timer: 'linear-gradient(to right, #00c27e, #e87af6)',
-    glow: 'rgba(0, 145, 255, 0.2)',
-    accent: '#f041d1'
-  },
-  'ultraviolet': {
-    bg: '#001513',
-    card: 'rgba(100, 53, 255, 0.03)',
-    timer: 'linear-gradient(to right, #6435ff, #ff40de)',
-    glow: 'rgba(255, 64, 222, 0.45)',
-    accent: '#c170e5'
   }
 };
 
