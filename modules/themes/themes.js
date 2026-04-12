@@ -41,54 +41,12 @@ export const THEMES = {
     glow: 'rgba(255, 113, 206, 0.4)',
     accent: '#ff71ce'
   },
-  'monochrome': {
-    bg: '#0a0a0a',
-    card: 'rgba(255, 255, 255, 0.02)',
-    timer: 'linear-gradient(to right, #ffffff, #aaaaaa)',
-    glow: 'rgba(255, 255, 255, 0.2)',
-    accent: '#ffffff'
-  },
-  'sakura': {
-    bg: '#1a0f12',
-    card: 'rgba(255, 183, 197, 0.02)',
-    timer: 'linear-gradient(to right, #ffb7c5, #ff8fa3)',
-    glow: 'rgba(255, 143, 163, 0.4)',
-    accent: '#ffb7c5'
-  },
-  'forest': {
-    bg: '#080d08',
-    card: 'rgba(46, 139, 87, 0.02)',
-    timer: 'linear-gradient(to right, #2e8b57, #98fb98)',
-    glow: 'rgba(46, 139, 87, 0.4)',
-    accent: '#7cfc00'
-  },
-  'nebula': {
-    bg: '#050510',
-    card: 'rgba(138, 43, 226, 0.02)',
-    timer: 'linear-gradient(to right, #8a2be2, #00d2ff)',
-    glow: 'rgba(138, 43, 226, 0.5)',
-    accent: '#bf77ff'
-  },
-  'glacier': {
-    bg: '#000a0f',
-    card: 'rgba(0, 242, 255, 0.02)',
-    timer: 'linear-gradient(to right, #00f2ff, #ffffff)',
-    glow: 'rgba(0, 242, 255, 0.3)',
-    accent: '#a3f7ff'
-  },
-  'midnight': {
-    bg: '#020205',
-    card: 'rgba(255, 255, 255, 0.01)',
-    timer: 'linear-gradient(to right, #1e3a8a, #3b82f6)',
-    glow: 'rgba(59, 130, 246, 0.3)',
-    accent: '#60a5fa'
-  },
-  'amber': {
-    bg: '#0f0900',
-    card: 'rgba(255, 191, 0, 0.02)',
-    timer: 'linear-gradient(to right, #ffbf00, #ff8000)',
-    glow: 'rgba(255, 191, 0, 0.4)',
-    accent: '#ffd700'
+  'ultraviolet': {
+    bg: '#001513',
+    card: 'rgba(100, 53, 255, 0.03)',
+    timer: 'linear-gradient(to right, #6435ff, #ff40de)',
+    glow: 'rgba(255, 64, 222, 0.45)',
+    accent: '#c170e5'
   }
 };
 
