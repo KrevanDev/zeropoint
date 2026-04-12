@@ -43,7 +43,7 @@ export const THEMES = {
   },
   'prism': {
     bg: '#f5eefa',
-    card: 'rgba(194, 84, 193, 0.07)',
+    card: 'rgba(194, 84, 193, 0.15)',
     timer: 'linear-gradient(to right, #00c27e, #e87af6)',
     glow: 'rgba(0, 145, 255, 0.2)',
     accent: '#f041d1'
